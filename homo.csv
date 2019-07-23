@@ -1,0 +1,17 @@
+,Number,Question,A,B,C,D,Correct,Feedback
+1,1,What type of distribution does a single interarrival time follow?,exponential,gamma,beta,poisson,exponential,Check the interarrival time distribution plot.
+2,2,"For the homogeneous Poisson Process below, which lambda best fits the plot?",2,3,4,5,4,Incorrect. What is the relationship between N(t) and the time?
+3,3,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,constant,Incorrect. Pay attention to the shape of the curve.
+4,4,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,inverse,Incorrect. Pay attention to the shape of the curve.
+5,5,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,exponential,Incorrect. Pay attention to the shape of the curve.
+6,6,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,linear,Incorrect. Pay attention to the shape of the curve.
+7,7,"For the homogeneous Poisson Process below, which lambda best fits the plot?",3,0.3,0.2,2,0.3,Incorrect. What is the relationship between N(t) and the time?
+8,8,"Supposed that the number of events is fixed. For the homogeneous Poisson Process, if lambda is large, then what should the time be?",large,small,the same,undecided,small,Move the bar of the plot and see the changes for the time.
+9,9,"Supposed the time is fixed. For the homogeneous Poisson Process, when the total number of events increase, how would lambda change",larger,smaller,the same,undecided,larger,Move the bar of the plot and see the changes for lambda.
+10,10,"For a homogeneous poisson process, is lambda a function of time?",Yes,No,undecided,I don't know.,No,This is a homogeneous process. Look at the prerequisite for both homogeneous and nonhomogeneous poisson process.
+11,11,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,exponential,Incorrect. Pay attention to the shape of the curve.
+12,12,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,constant,Incorrect. Pay attention to the shape of the curve.
+13,13,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,linear,Incorrect. Pay attention to the shape of the curve.
+14,14,What type of the intensity functions best fits the plot?,constant,inverse,exponential,linear,inverse,Incorrect. Pay attention to the shape of the curve.
+15,15,"For a nonhomogeneous poisson process, what is the relationship between the expected value og N(t) and the intensity function(lambda)?",linear function,quadratic function,integral,exponential function,integral,Check the prerequsite.
+16,16,What is the relationship between a homogeneous and nonhomogeneous poisson process?,Homonegeous poisson process is a special case for the nonhomogeneous one.,"When the intensity function is constant, the nonhomogeneous poisson process becomes a homoheneous poisson process.",Both of the above are correct.,None of the above is correct.,Both of the above are correct.,Compare the  the lambda for both.
