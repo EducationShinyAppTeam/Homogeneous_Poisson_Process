@@ -195,136 +195,136 @@ shinyServer(function(input, output, session) {
     }
    })
 
-  question <- read.csv('homo.csv')
-  question$Question=as.character(question$Question)
-  question$A=as.character(question$A)
-  question$B=as.character(question$B)
-  question$C=as.character(question$C)
-  question$D=as.character(question$D)
-  question$Correct=as.character(question$Correct)
-  question$Feedback=as.character(question$Feedback)
-  sapply(question, class)
-  
-  values <- reactiveValues()
-  
-  output$question <- renderUI ({
-    values$num <- sample(1:16, 1, replace = FALSE) 
-    cquestion <- question$Question[values$num]
-    if(values$num == 1){
-      IG<-div(style = 'text-align: center', img(src = "1.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 2){
-      IG<-div(style = 'text-align: center', img(src = "2.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 3){
-      IG<-div(style = 'text-align: center', img(src = "3.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 4){
-      IG<-div(style = 'text-align: center', img(src = "4.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 5){
-      IG<-div(style = 'text-align: center', img(src = "5.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 6){
-      IG<-div(style = 'text-align: center', img(src = "6.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 7){
-      IG<-div(style = 'text-align: center', img(src = "7.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 8){
-      IG<-div(style = 'text-align: center', img(src = "8.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 9){
-      IG<-div(style = 'text-align: center', img(src = "9.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 10){
-      IG<-div(style = 'text-align: center', img(src = "10.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 11){
-      IG<-div(style = 'text-align: center', img(src = "11.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 12){
-      IG<-div(style = 'text-align: center', img(src = "12.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 13){
-      IG<-div(style = 'text-align: center', img(src = "13.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 14){
-      IG<-div(style = 'text-align: center', img(src = "14.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 15){
-      IG<-div(style = 'text-align: center', img(src = "15.jpg", width = "600px", height = "350px"))
-    }
-    
-    if(values$num == 16){
-      IG<-div(style = 'text-align: center', img(src = "16.jpg", width = "600px", height = "350px"))
-    }
-    
-    out<-HTML(paste(cquestion, IG, sep = "<br/>"))
-    out
-    
-  })
-  
-  #output$picture = renderUI({
-    
-  #})
-  
-  output$questionChoice <- renderUI ({
-    selectInput('challengeChoice', label = '',
-                choices = c("Please select your response",question$A[values$num], question$B[values$num], question$C[values$num], question$D[values$num])
-    )
-  })
-  
-  
-  
-  observeEvent(input$nextX, {
-    values$num = sample(1:16, 1, replace = FALSE) 
-    questionUpdate <- question$Question[values$num]
-    questionUpdate
-  })
-  
-  observeEvent(input$submitX, {
-    if (input$challengeChoice == question$Correct[values$num]) {
-      output$challengeFeedback <- renderUI ({
-        div(style = "text-align: center", img(src = 'correct.png', height = 100, width = 100))
-      })
-      output$textFeedback <- renderUI ({ #UI
-        div(style = "text-align: center", tags$h4('Congratulations!'))
-      })
-    }
-    else {
-      output$challengeFeedback <- renderUI ({
-        div(style = "text-align: center", img(src = 'incorrect.png', height = 100, width = 100))
-      })
-      output$textFeedback <- renderUI ({
-        div(style = "text-align: center", tags$h4(question$Feedback[values$num]))
-      })
-    }
-  })
-  
-  observeEvent(input$nextX, {
-    shinyjs::hideElement("challengeFeedback")
-    shinyjs::hideElement('textFeedback')
-  })
-  
-  observeEvent(input$submitX, {
-    shinyjs::showElement("challengeFeedback")
-    shinyjs::showElement('textFeedback')
-  })
+  # question <- read.csv('homo.csv')
+  # question$Question=as.character(question$Question)
+  # question$A=as.character(question$A)
+  # question$B=as.character(question$B)
+  # question$C=as.character(question$C)
+  # question$D=as.character(question$D)
+  # question$Correct=as.character(question$Correct)
+  # question$Feedback=as.character(question$Feedback)
+  # sapply(question, class)
+  # 
+  # values <- reactiveValues()
+  # 
+  # output$question <- renderUI ({
+  #   values$num <- sample(1:16, 1, replace = FALSE) 
+  #   cquestion <- question$Question[values$num]
+  #   if(values$num == 1){
+  #     IG<-div(style = 'text-align: center', img(src = "1.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 2){
+  #     IG<-div(style = 'text-align: center', img(src = "2.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 3){
+  #     IG<-div(style = 'text-align: center', img(src = "3.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 4){
+  #     IG<-div(style = 'text-align: center', img(src = "4.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 5){
+  #     IG<-div(style = 'text-align: center', img(src = "5.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 6){
+  #     IG<-div(style = 'text-align: center', img(src = "6.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 7){
+  #     IG<-div(style = 'text-align: center', img(src = "7.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 8){
+  #     IG<-div(style = 'text-align: center', img(src = "8.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 9){
+  #     IG<-div(style = 'text-align: center', img(src = "9.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 10){
+  #     IG<-div(style = 'text-align: center', img(src = "10.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 11){
+  #     IG<-div(style = 'text-align: center', img(src = "11.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 12){
+  #     IG<-div(style = 'text-align: center', img(src = "12.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 13){
+  #     IG<-div(style = 'text-align: center', img(src = "13.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 14){
+  #     IG<-div(style = 'text-align: center', img(src = "14.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 15){
+  #     IG<-div(style = 'text-align: center', img(src = "15.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   if(values$num == 16){
+  #     IG<-div(style = 'text-align: center', img(src = "16.jpg", width = "600px", height = "350px"))
+  #   }
+  #   
+  #   out<-HTML(paste(cquestion, IG, sep = "<br/>"))
+  #   out
+  #   
+  # })
+  # 
+  # #output$picture = renderUI({
+  #   
+  # #})
+  # 
+  # output$questionChoice <- renderUI ({
+  #   selectInput('challengeChoice', label = '',
+  #               choices = c("Please select your response",question$A[values$num], question$B[values$num], question$C[values$num], question$D[values$num])
+  #   )
+  # })
+  # 
+  # 
+  # 
+  # observeEvent(input$nextX, {
+  #   values$num = sample(1:16, 1, replace = FALSE) 
+  #   questionUpdate <- question$Question[values$num]
+  #   questionUpdate
+  # })
+  # 
+  # observeEvent(input$submitX, {
+  #   if (input$challengeChoice == question$Correct[values$num]) {
+  #     output$challengeFeedback <- renderUI ({
+  #       div(style = "text-align: center", img(src = 'correct.png', height = 100, width = 100))
+  #     })
+  #     output$textFeedback <- renderUI ({ #UI
+  #       div(style = "text-align: center", tags$h4('Congratulations!'))
+  #     })
+  #   }
+  #   else {
+  #     output$challengeFeedback <- renderUI ({
+  #       div(style = "text-align: center", img(src = 'incorrect.png', height = 100, width = 100))
+  #     })
+  #     output$textFeedback <- renderUI ({
+  #       div(style = "text-align: center", tags$h4(question$Feedback[values$num]))
+  #     })
+  #   }
+  # })
+  # 
+  # observeEvent(input$nextX, {
+  #   shinyjs::hideElement("challengeFeedback")
+  #   shinyjs::hideElement('textFeedback')
+  # })
+  # 
+  # observeEvent(input$submitX, {
+  #   shinyjs::showElement("challengeFeedback")
+  #   shinyjs::showElement('textFeedback')
+  # })
   
 })
 

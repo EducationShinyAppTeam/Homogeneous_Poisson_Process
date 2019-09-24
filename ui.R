@@ -19,8 +19,8 @@ sidebar = dashboardSidebar(
   sidebarMenu(id = 'tabs', 
               menuItem('Prerequisites', tabName = 'prerequisite', icon = icon('book')),
               menuItem("Overview", tabName = "overview", icon = icon("dashboard")),
-              menuItem('Explore', tabName = "exp", icon = icon('wpexplorer')),
-              menuItem("Get some Practice", tabName = "game", icon = icon('gamepad'))
+              menuItem('Explore', tabName = "exp", icon = icon('wpexplorer'))
+              #menuItem("Get some Practice", tabName = "game", icon = icon('gamepad'))
               )
 )
 
@@ -131,43 +131,43 @@ body = dashboardBody(
                           textOutput(""))
               )
             )
-    ),
-    tabItem(tabName = "game",
-            tabsetPanel(id = "game",
-                        tabPanel(title = h4(strong("Instructions")), value = "instr",
-                                 fluidPage(theme = 'Muted',
-                                           titlePanel('Instructions to Answering the Practice Questions'),
-                                           h3(p('Click on the GO! button to start the game.')),
-                                           h3(p('Select from the dropdown menu the answer you think correct.')),
-                                           br(),
-                                           div(style = "text-align: center", 
-                                               bsButton(inputId = "bsButton4",label = "GO!", icon('bolt'),  size = "median"))
-                                )
-                        ),
-                        
-                        tabPanel(title = h4(strong("Multiple Choices")), value = "fib",
-                                 fluidRow(
-                                   width = 12, style = 'color: #000000; background-color: #ffffff', htmlOutput('question')
-                                 ),
-                                 
-                                 #uiOutput("picture", height = "400px") %>% withSpinner(color="#0dc5c1"),
-                                 
-                                 fluidRow(
-                                   box(width = 12, style = 'color: #000000; background-color: #ff8080', htmlOutput('questionChoice'))
-                                 ),
-                                 
-                                 conditionalPanel('input.submitX != 0',
-                                                  htmlOutput('challengeFeedback'),
-                                                  htmlOutput('textFeedback')),
-                                 
-                                 br(),
-                                 
-                                 div(style = "text-align: center",
-                                     bsButton(inputId = 'submitX', label = 'Check Answer',size = 'median'),
-                                     bsButton(inputId = 'nextX', label = 'Next',size = 'median'))
-                                 )
-                        )
-            )
+    )
+    # tabItem(tabName = "game",
+    #         tabsetPanel(id = "game",
+    #                     tabPanel(title = h4(strong("Instructions")), value = "instr",
+    #                              fluidPage(theme = 'Muted',
+    #                                        titlePanel('Instructions to Answering the Practice Questions'),
+    #                                        h3(p('Click on the GO! button to start the game.')),
+    #                                        h3(p('Select from the dropdown menu the answer you think correct.')),
+    #                                        br(),
+    #                                        div(style = "text-align: center", 
+    #                                            bsButton(inputId = "bsButton4",label = "GO!", icon('bolt'),  size = "median"))
+    #                             )
+    #                     ),
+    #                     
+    #                     tabPanel(title = h4(strong("Multiple Choices")), value = "fib",
+    #                              fluidRow(
+    #                                width = 12, style = 'color: #000000; background-color: #ffffff', htmlOutput('question')
+    #                              ),
+    #                              
+    #                              #uiOutput("picture", height = "400px") %>% withSpinner(color="#0dc5c1"),
+    #                              
+    #                              fluidRow(
+    #                                box(width = 12, style = 'color: #000000; background-color: #ff8080', htmlOutput('questionChoice'))
+    #                              ),
+    #                              
+    #                              conditionalPanel('input.submitX != 0',
+    #                                               htmlOutput('challengeFeedback'),
+    #                                               htmlOutput('textFeedback')),
+    #                              
+    #                              br(),
+    #                              
+    #                              div(style = "text-align: center",
+    #                                  bsButton(inputId = 'submitX', label = 'Check Answer',size = 'median'),
+    #                                  bsButton(inputId = 'nextX', label = 'Next',size = 'median'))
+    #                              )
+    #                     )
+    #         )
     
 ))
 
