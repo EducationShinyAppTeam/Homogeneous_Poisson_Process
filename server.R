@@ -177,17 +177,17 @@ shinyServer(function(input, output, session) {
 
     for(i in 1:p()){
       if(i == 1){
-        g1 <- ggplot(inter.arr, aes(x = Int, fill = factor(Group))) + 
-            geom_dotplot(stackgroups = TRUE, binwidth = 0.1/rate(), method = "histodot") +
+        g1 <- ggplot(inter.arr, aes(x = Int, fill = factor(Group))) + xlab("Number of units in each interarrival time") + ylab("Relative Frequency") +
+            geom_dotplot(stackgroups = TRUE, binwidth = 0.07/rate(), method = "histodot") +
             labs(title = "Interarrival Time Distribution") +
             theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
         print(g1)
       }
       if(i > 1){
         for(k in 1:i){
-          g1 <- ggplot(inter.arr, aes(x = Int, fill = factor(Group))) + 
-            geom_dotplot(stackgroups = TRUE, binwidth = 0.1/rate(), method = "histodot") +
-            labs(title = "Interarrival Time Distribution") +
+          g1 <- ggplot(inter.arr, aes(x = Int, fill = factor(Group))) + xlab("Number of units in each interarrival time") + ylab("Relative Frequency") +
+            geom_dotplot(stackgroups = TRUE, binwidth = 0.07/rate(), method = "histodot") +
+            labs(title = "Interarrival Time Distribution") + 
             theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
           print(g1)
         }
