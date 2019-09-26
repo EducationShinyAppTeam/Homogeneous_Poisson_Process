@@ -60,7 +60,7 @@ body = dashboardBody(
     ),
     
     tabItem(tabName = "overview",
-            tags$a(href='http://stat.psu.edu/',tags$img(src='PS-HOR-RGB-2C', align = "left", width = 180)),
+            tags$a(href='http://stat.psu.edu/',tags$img(src='PS-HOR-RGB-2C.png', align = "left", width = 180)),
             br(),br(),br(),
             
             h3(tags$b("About:")),
