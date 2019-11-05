@@ -10,9 +10,9 @@ library(shinycssloaders)
 header = dashboardHeader(title = "Homogeneous Poisson Process", titleWidth = 350,
                          tags$li(class = "dropdown",
                                  tags$a(href = "https://shinyapps.science.psu.edu/",
-                                        icon("home", lib = "font-awesome")))
-                         #tags$li(class = "dropdown",
-                                # actionLink("info", icon("info"), class = "myClass"))
+                                        icon("home", lib = "font-awesome"))),
+                         tags$li(class = "dropdown",
+                                 actionLink("info", icon("info"), class = "myClass"))
                          )
 
 sidebar = dashboardSidebar(
@@ -36,9 +36,9 @@ body = dashboardBody(
       tabName = 'prerequisite', withMathJax(),
       
       h3(strong('Background: Homogeneous Poisson Process')),br(),
-      h4("If a point process with independent increments and a average of \\(\\lambda t\\) at time t, where  
+      h4("If a point process has a parameter of the form \\(\\lambda t\\), with t represents the time and 
           \\(\\lambda\\) is a constant that represents the rate(or intensity), then this point process is called 
-         a homogeneous Poisson process."),
+         a homogeneous poisson process."),
       br(),
       
       h4(strong("Properties: ")),
@@ -47,10 +47,11 @@ body = dashboardBody(
       
       h4(tags$li("The expected value of N(t) is \\(\\lambda t\\).")),
       
-      h4(tags$li("Suppose N(t) follows a homogeneous poisson process between time 0 and T, with \\(t_{i}\\) being the time when the ith event occurs.Then the \\(t_{i}\\) 
-                follow the distribution of order statistics from a uniform variable between 0 and T.")),
+      h4(tags$li("Suppose N(t) follows a homogeneous poisson process over a specific time period of T. Suppose 
+                 we separate T into different time point \\(t_{i}\\) with i=0,1,2,..., then all \\(t_{i}\\) 
+                 independently and identically follow uniform distribution within (0,T).")),
       
-      h4(tags$li("The interarrival time \\(t_{i+1}-t_{i}\\) for each i follows the exponential 
+      h4(tags$li("The interarrival time \\(t_{i+1}-t_{i}\\) follows for each i follows exponential 
                  distribution with rate \\(\\lambda\\).")),
       tags$img(src = 'Homo2.png', width = "384px", height = "200px"),
       
@@ -60,7 +61,7 @@ body = dashboardBody(
     ),
     
     tabItem(tabName = "overview",
-            tags$a(href='http://stat.psu.edu/',tags$img(src='PS-HOR-RGB-2C.png', align = "left", width = 180)),
+            tags$a(href='http://stat.psu.edu/',tags$img(src='PS-HOR-RGB-2C', align = "left", width = 180)),
             br(),br(),br(),
             
             h3(tags$b("About:")),
@@ -73,9 +74,14 @@ body = dashboardBody(
             h3(tags$b("Instructions:")),
             
             h4(
-              tags$li("By sliding the bar for the number of events and the interarrival rate, you will see how the Poisson 
+              tags$li("In this app, you will explore a homogeneous poisson process based on the simulation of 
+                      exponential distribution."),
+              tags$li("By sliding the bar of the number of events and the interarrival rate, you will see how poisson 
                       process will be changed."),
-              tags$li("You can view the N(t) plotted against time as well as the residuals and the interarrival times")
+              tags$li("From the plot you can see the differences between poisson process and other 
+                      distributions."),
+              tags$li("Read the instructions for checking the distributions you would like to see, and 
+                      then click on Go button to get started!")
               ),
             div(style = "text-align: center", bsButton(inputId = "bsButton1", label = "G O !",icon = icon('bolt'), size = 'median')),
             br(),
@@ -97,7 +103,7 @@ body = dashboardBody(
                   sliderInput("lambda", "Interarrival Rate",
                               min = 0.1, max = 10, value = 0.1, step = 0.1),
                   sliderInput("nevent", "# of events up to t",
-                              min = 1, max = 150, value = 100, step = 1),
+                              min = 1, max = 200, value = 100, step = 1),
                   sliderInput("path", "# of residual paths",
                               min = 1, max = 5, value = 1, step = 1),
     
@@ -110,13 +116,13 @@ body = dashboardBody(
                 
                 mainPanel(
                           plotOutput("homopois",height = "350px") %>% withSpinner(color="#0dc5c1"),
-                          bsPopover("homopois","Sample Homogeneous Poisson Plot","This is the plot of the sample you generated for Homogeneous Poisson.",
+                          bsPopover("homopois","Sample Homogeneous Poisson Plot","This is the plot of the sample you generated on Homogeneous Poisson Plot.",
                                     trigger="hover",placement="top"),br(),
                           plotOutput("resipath",height = "350px") %>% withSpinner(color="#0dc5c1"),
                           bsPopover("resipath","Residuals Plot for Homogeneous Poisson Process",
-                                    "This is the residuals plot for Homogeneous Poisson Process.The black line represents the expected value of the residuals.",
+                                    "This is the residuals plot for Homogeneous Poisson Process. ",
                                     trigger = "hover", placement = "top"),br(),
-                          plotOutput("interarrival", height = "450px") %>% withSpinner(color="#0dc5c1"),
+                          plotOutput("interarrival", height = "400px") %>% withSpinner(color="#0dc5c1"),
                           bsPopover("interarrival","Interarrival Times Distribution",
                                     "This plot shows the distribution of interarrival times. From the plot it is
                                     easy to see that interarrival times roughly follow exponential distribution.",
