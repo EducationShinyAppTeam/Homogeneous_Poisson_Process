@@ -48,7 +48,7 @@ body = dashboardBody(
       h4(tags$li("The expected value of \\(N(t)\\) is \\(\\lambda t\\) and the expected value of \\(N(t+s)-N(t)=\\lambda s\\).")),
       
       h4(tags$li("Suppose \\(N(t)\\) follows a homogeneous Poisson process between time 0 and \\(T\\) with \\(t_{i}\\) being the time when the \\(i^{th}\\) event occurs. Then, given \\(N(T)\\),
-                  then \\(t_{i}\\)'s follow the distribution of order statistics from a uniform variable between 0 and \\(T\\). 
+                  the \\(t_{i}\\)'s follow the distribution of order statistics from a uniform variable between 0 and \\(T\\). 
                  ")),
       
       h4(tags$li("The interarrival times \\(t_{i+1}-t_{i}\\) for each \\(i\\) follows exponential 
