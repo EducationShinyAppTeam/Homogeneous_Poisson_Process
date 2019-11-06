@@ -178,7 +178,7 @@ shinyServer(function(input, output, session) {
     ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
       theme_bw()+theme_classic()+
       ggtitle("Interarrival Time Distribution") +
-      xlab("Time") + ylab("Frequency")+labs(fill = "Number of Path")+
+      xlab("Time") + ylab("Estimated Frequency")+labs(fill = "Number of Path")+
       theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
             panel.background = element_rect(fill = 'white', colour = 'black'),
             panel.grid.major = element_blank(),
