@@ -38,7 +38,7 @@ body = dashboardBody(
       h3(strong('Background: Homogeneous Poisson Process')),br(),
       h4("If a point process, {\\(N(t);t>=0\\)} has a parameter of the form \\(\\lambda t\\), with independent increments and with \\(N(t)\\) being Poisson for all \\(t\\) with an average of \\(\\lambda t\\),
           \\(\\lambda\\) is a constant that represents the rate(or intensity), then this point process is called 
-         a homogeneous poisson process."),
+         a homogeneous Poisson process."),
       br(),
       
       h4(strong("Properties: ")),
