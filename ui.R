@@ -36,7 +36,7 @@ body = dashboardBody(
       tabName = 'prerequisite', withMathJax(),
       
       h3(strong('Background: Homogeneous Poisson Process')),br(),
-      h4("If a point process has a parameter of the form \\(\\lambda t\\), with t represents the time and 
+      h4("If a point process, {\\(N(t);t>=0\\)} has a parameter of the form \\(\\lambda t\\), with independent increments and with \\(N(t)\\) being Poisson for all \\(t\\) with an average of \\(\\lambda t\\),
           \\(\\lambda\\) is a constant that represents the rate(or intensity), then this point process is called 
          a homogeneous poisson process."),
       br(),
@@ -45,15 +45,15 @@ body = dashboardBody(
       
       h4(tags$li("\\(N(0)=0\\)")),
       
-      h4(tags$li("The expected value of N(t) is \\(\\lambda t\\).")),
+      h4(tags$li("The expected value of \\(N(t)\\) is \\(\\lambda t\\) and the expected value of \\(N(t+s)-N(t)=\\lambda s\\).")),
       
-      h4(tags$li("Suppose N(t) follows a homogeneous poisson process over a specific time period of T. Suppose 
-                 we separate T into different time point \\(t_{i}\\) with i=0,1,2,..., then all \\(t_{i}\\) 
-                 independently and identically follow uniform distribution within (0,T).")),
+      h4(tags$li("Suppose \\(N(t)\\) follows a homogeneous Poisson process between time 0 and \\(T\\) with \\(t_{i}\\) being the time when the \\(i^{th}\\) event occurs. Then, given \\(N(T)\\),
+                  then \\(t_{i}\\)'s follow the distribution of order statistics from a uniform variable between 0 and \\(T\\). 
+                 ")),
       
-      h4(tags$li("The interarrival time \\(t_{i+1}-t_{i}\\) follows for each i follows exponential 
+      h4(tags$li("The interarrival times \\(t_{i+1}-t_{i}\\) for each \\(i\\) follows exponential 
                  distribution with rate \\(\\lambda\\).")),
-      tags$img(src = 'Homo2.png', width = "384px", height = "200px"),
+      tags$img(src = 'Homo2.png', width = "750px", height = "200px"),
       
       br(),
       div(style = "text-align: center",bsButton("goover", "Go to the overview", icon("bolt"), size = "medium"))
@@ -74,15 +74,10 @@ body = dashboardBody(
             h3(tags$b("Instructions:")),
             
             h4(
-              tags$li("In this app, you will explore a homogeneous poisson process based on the simulation of 
-                      exponential distribution."),
-              tags$li("By sliding the bar of the number of events and the interarrival rate, you will see how poisson 
+              tags$li("By sliding the bar for the number of events and the interarrival rate, you will see how the Poisson 
                       process will be changed."),
-              tags$li("From the plot you can see the differences between poisson process and other 
-                      distributions."),
-              tags$li("Read the instructions for checking the distributions you would like to see, and 
-                      then click on Go button to get started!")
-              ),
+              tags$li("You can view the \\(N(t)\\) plotted against time as well as the residuals and the interarrival times")
+            ),
             div(style = "text-align: center", bsButton(inputId = "bsButton1", label = "G O !",icon = icon('bolt'), size = 'median')),
             br(),
             
@@ -103,7 +98,7 @@ body = dashboardBody(
                   sliderInput("lambda", "Interarrival Rate",
                               min = 0.1, max = 10, value = 0.1, step = 0.1),
                   sliderInput("nevent", "# of events up to t",
-                              min = 1, max = 200, value = 100, step = 1),
+                              min = 1, max = 150, value = 100, step = 1),
                   sliderInput("path", "# of residual paths",
                               min = 1, max = 5, value = 1, step = 1),
     
