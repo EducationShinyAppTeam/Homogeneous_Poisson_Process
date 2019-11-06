@@ -67,7 +67,7 @@ body = dashboardBody(
             h3(tags$b("About:")),
             
             withMathJax(),
-            h4("In this app you will explore the relationship between N(t) and \\(t_{k}\\) through the simulation
+            h4("In this app you will explore the relationship between \\(N(t)\\) and \\(t_{k}\\) through the simulation
                of data"),
             
             br(),
