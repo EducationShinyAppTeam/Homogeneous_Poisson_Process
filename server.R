@@ -183,7 +183,7 @@ shinyServer(function(input, output, session) {
             panel.background = element_rect(fill = 'white', colour = 'black'),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank()) +
-      stat_density(geom = "line", size = 1)+
+      stat_density(geom = "line", size = 1, position = "identity")+
       scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
       scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
       scale_color_manual(values = colors)
