@@ -4,6 +4,7 @@ library(shinyBS)
 library(shinyjs)
 library(plotly)
 library(ggplot2)
+library(shinyWidgets)
 library(shinycssloaders)
 
 colors = c("#3CA2C8", "#10559A","#CC6BB1", "#F9C6D7","#DB4C77")
@@ -30,6 +31,15 @@ resi.homo = function(n,lambda){
 
 shinyServer(function(input, output, session) {
   
+  observeEvent(input$info,{
+    sendSweetAlert(
+      session = session,
+      title = "Instructions:",
+      text = "This app explores the Poisson process to see how the distribution of the count at time t, 
+              the interarrival times, and the deviation from expectations behave as the intensity rate and observation time changes.",
+      type = "info"
+    )
+  })
   observeEvent(input$goover, {
     updateTabItems(session, "tabs", "overview")
   })
@@ -59,10 +69,8 @@ shinyServer(function(input, output, session) {
   
   output$design = renderUI({
     if(input$designcheckbox){
-      withMathJax(h4("This plot was generated from an exponential prior distribution. X-axis represents t and Y-axis 
-         represents N(t). In the plot, you can see that the rate (\\(\\lambda\\)) multiplied by time (t) roughly 
-         equals to # of events up to t (N(t))."))
-      
+      withMathJax(h4("These plots were generated from simulations of a homogeneous Poisson Process which has 
+                      exponential interarrival times with rate intensity \\(\\lambda\\)."))
     }
   })
   
@@ -177,8 +185,8 @@ shinyServer(function(input, output, session) {
 
     ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
       theme_bw()+theme_classic()+
-      ggtitle("Interarrival Time Distribution") +
-      xlab("Time") + ylab("Estimated Frequency")+labs(fill = "Number of Path")+
+      ggtitle("Interarrival Time Distribution for Sampled Processes") +
+      xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
       theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
             panel.background = element_rect(fill = 'white', colour = 'black'),
             panel.grid.major = element_blank(),
