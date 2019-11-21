@@ -119,8 +119,7 @@ body = dashboardBody(
                                     trigger = "hover", placement = "top"),br(),
                           plotOutput("interarrival", height = "400px") %>% withSpinner(color="#0dc5c1"),
                           bsPopover("interarrival","Interarrival Times Distribution",
-                                    "This plot shows the distribution of interarrival times. From the plot it is
-                                    easy to see that interarrival times roughly follow exponential distribution.",
+                                    "This plot shows the fitted density curve(s) for interarrival times from sampled processes.",
                                     trigger = "hover", placement = "top"),br(),
                           br(),
                           textOutput(""))
