@@ -182,8 +182,12 @@ shinyServer(function(input, output, session) {
     }
 
     names(inter.arr) = c("Int","Group")
+    
+    cutoffX = qexp(p = 0.95,rate = rate())
+    xSeq = seq(0,cutoffX,length.out = p()*n())
+    yTheo = dexp(x = xSeq,rate = rate())
 
-    ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
+    plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
       theme_bw()+theme_classic()+
       ggtitle("Interarrival Time Distribution for Sampled Processes") +
       xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
@@ -195,6 +199,9 @@ shinyServer(function(input, output, session) {
       scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
       scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
       scale_color_manual(values = colors)
+    
+     plot2 = plot1 + geom_line(aes(xSeq,yTheo),colour = "black")
+     plot2
       
    })
 
