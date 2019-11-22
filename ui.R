@@ -101,7 +101,8 @@ body = dashboardBody(
                               min = 1, max = 150, value = 100, step = 1),
                   sliderInput("path", "# of residual paths",
                               min = 1, max = 5, value = 1, step = 1),
-    
+                  checkboxInput("densitycheckbox","Show True Density curve", TRUE),
+                  
                   actionButton("resample", "Sample", icon("retweet")),
                   bsPopover("new","Note","By clicking on this button, new 100 events will be generated.",
                             trigger="hover",placement="right"),br(),
@@ -119,10 +120,16 @@ body = dashboardBody(
                                     trigger = "hover", placement = "top"),br(),
                           plotOutput("interarrival", height = "400px") %>% withSpinner(color="#0dc5c1"),
                           bsPopover("interarrival","Interarrival Times Distribution",
-                                    "This plot shows the fitted density curve(s) for interarrival times from sampled processes.",
+                                    "This plot shows the fitted density curve(s) for interarrival times from sampled processes.The thick black line shows the true density curve.",
                                     trigger = "hover", placement = "top"),br(),
                           br(),
-                          textOutput(""))
+                          textOutput("feedback"),
+                          tags$head(tags$style("#feedback{color: red;
+                                 font-size: 20px;
+                                 font-style: italic;
+                                 }"
+                            )
+                          ))
               )
             )
     )
