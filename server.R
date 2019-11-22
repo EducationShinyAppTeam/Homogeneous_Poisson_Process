@@ -158,52 +158,104 @@ shinyServer(function(input, output, session) {
   
   output$interarrival = renderPlot({
     
-    x.value = matrix(0, nrow = p(), ncol = n())
-    
-    for (j in 1:p()){
-      x = rexp(n(),rate())
-      m = cumsum(x)
-      for (i in 1:n()){
-        x.value[j,i] = m[i] 
-      }
-    }
-    
-    arr = cbind(matrix(0,nrow=p(),ncol=1),x.value)
-    inter.arr = data.frame()
-    Int = data.frame()
-    Group = data.frame()
-    
-    for (i in 1:p()){
-      for (j in 1:n()){
-        Int[j + (n())*(i - 1), 1] = arr[i,j+1] - arr[i,j]
-        Group[j + (n())*(i - 1), 1] = i
-      }
-      inter.arr = cbind(Int,Group)
-    }
-
-    names(inter.arr) = c("Int","Group")
-    
-    cutoffX = qexp(p = 0.95,rate = rate())
-    xSeq = seq(0,cutoffX,length.out = p()*n())
-    yTheo = dexp(x = xSeq,rate = rate())
-
-    plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
-      theme_bw()+theme_classic()+
-      ggtitle("Interarrival Time Distribution for Sampled Processes") +
-      xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
-      theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
-            panel.background = element_rect(fill = 'white', colour = 'black'),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank()) +
-      stat_density(geom = "line", size = 1, position = "identity")+
-      scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
-      scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
-      scale_color_manual(values = colors)
-    
-     plot2 = plot1 + geom_line(aes(xSeq,yTheo),colour = "black")
-     plot2
+    if(input$densitycheckbox){
+      x.value = matrix(0, nrow = p(), ncol = n())
       
+      for (j in 1:p()){
+        x = rexp(n(),rate())
+        m = cumsum(x)
+        for (i in 1:n()){
+          x.value[j,i] = m[i] 
+        }
+      }
+      
+      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value)
+      inter.arr = data.frame()
+      Int = data.frame()
+      Group = data.frame()
+      
+      for (i in 1:p()){
+        for (j in 1:n()){
+          Int[j + (n())*(i - 1), 1] = arr[i,j+1] - arr[i,j]
+          Group[j + (n())*(i - 1), 1] = i
+        }
+        inter.arr = cbind(Int,Group)
+      }
+      
+      names(inter.arr) = c("Int","Group")
+      
+      cutoffX = qexp(p = 0.95,rate = rate())
+      xSeq = seq(0,cutoffX,length.out = p()*n())
+      yTheo = dexp(x = xSeq,rate = rate())
+      
+      plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
+        theme_bw()+theme_classic()+
+        ggtitle("Interarrival Time Distribution for Sampled Processes") +
+        xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
+        theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
+              panel.background = element_rect(fill = 'white', colour = 'black'),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()) +
+        stat_density(geom = "line", size = 1, position = "identity")+
+        scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
+        scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
+        scale_color_manual(values = colors)
+      
+      plot2 = plot1 + geom_line(aes(xSeq,yTheo),colour = "black",size = 1.5)
+      plot2
+    }
+    
+    else{
+      x.value = matrix(0, nrow = p(), ncol = n())
+      
+      for (j in 1:p()){
+        x = rexp(n(),rate())
+        m = cumsum(x)
+        for (i in 1:n()){
+          x.value[j,i] = m[i] 
+        }
+      }
+      
+      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value)
+      inter.arr = data.frame()
+      Int = data.frame()
+      Group = data.frame()
+      
+      for (i in 1:p()){
+        for (j in 1:n()){
+          Int[j + (n())*(i - 1), 1] = arr[i,j+1] - arr[i,j]
+          Group[j + (n())*(i - 1), 1] = i
+        }
+        inter.arr = cbind(Int,Group)
+      }
+      
+      names(inter.arr) = c("Int","Group")
+      
+      plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
+        theme_bw()+theme_classic()+
+        ggtitle("Interarrival Time Distribution for Sampled Processes") +
+        xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
+        theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
+              panel.background = element_rect(fill = 'white', colour = 'black'),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()) +
+        stat_density(geom = "line", size = 1, position = "identity")+
+        scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
+        scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
+        scale_color_manual(values = colors)
+      plot1
+     
+    }
+    
+    
+    })
+      output$feedback = renderPrint({
+      if (n()==1) {cat("CAUTION: Need more than one event to estimate density of interarrival times.")}
    })
+  
+  
+    
+
 
   # question <- read.csv('homo.csv')
   # question$Question=as.character(question$Question)
@@ -337,4 +389,5 @@ shinyServer(function(input, output, session) {
   # })
   
 })
-
+    
+  
