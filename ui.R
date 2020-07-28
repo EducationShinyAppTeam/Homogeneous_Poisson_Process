@@ -214,9 +214,8 @@ dashboardBody(
                                                                 "Expected Time 
                                                                 until Next Event"),
                                                   inline=T),
-                                     #textOutput("questionPrompt"),
                                      fluidRow(
-                                       column(width=6, 
+                                       column(width=5, 
                                               numericInput('challengeChoice', 
                                                     label = 'Guess the value for lambda.', 
                                                     value=0),
@@ -227,7 +226,7 @@ dashboardBody(
                                                        label = 'Next',
                                                        size = 'median')
                                               ),
-                                       column(width = 6, 
+                                       column(width = 7, 
                                      
                                      textOutput('textFeedback'),
                                      textOutput("trueAns"),
@@ -248,7 +247,7 @@ dashboardBody(
                            column(
                              conditionalPanel(condition="output.showGame",
                                               fluidRow(
-                                               column(width=8, 
+                                               column(width=7, 
                                                       numericInput('challengeChoiceT', 
                                                              label = 'Guess the value for lambda.',
                                                              value=0),
@@ -259,7 +258,7 @@ dashboardBody(
                                                                label = 'Next',
                                                                size = 'median'),
                                                       br(), br()),
-                                              column(width =4, 
+                                              column(width =5, 
                                                      br(),
                                                      textOutput('textFeedbackT'),
                                               textOutput("trueAnsT"),

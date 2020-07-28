@@ -450,26 +450,33 @@ shinyServer(function(input, output, session) {
   # Checks answer against the maximum likelihood guess and the correct answer
   # Assigns a score accordingly
   checkScore <- function(correct, ML, guess, invert=F){
-    if(invert){
-      correct <- 1/correct
-      ML <- 1/ML
-      guess <- 1/guess
-    }
-    if((guess<=ML && guess>=correct) || (guess>=ML && guess<=correct)){
-      score <- 4
-    }
-    else if(abs(guess-ML)<.5 || abs(guess-correct)<.5){
-      score <- 3
-    }
-    else if(abs(guess-ML)<1 || abs(guess-correct)<1){
-      score <- 2
-    }
-    else if(abs(guess-ML)<1.5 || abs(guess-correct)<1.5){
-      score <- 1
-    }
-    else{
-      score <- 0
-    }
+    if(!is.na(guess)){ # If guess is null, just give score of 0
+      if(invert){
+        correct <- 1/correct
+        ML <- 1/ML
+        guess <- 1/guess
+      }
+      # If guess is between (endpoints included) Maximum likelihood and correct
+      if((guess<=ML && guess>=correct) || (guess>=ML && guess<=correct)){
+        score <- 4
+      }
+      # If within .5 of range for score of 4
+      else if(abs(guess-ML)<.5 || abs(guess-correct)<.5){
+        score <- 3
+      }
+      # If within 1 of range for score of 4
+      else if(abs(guess-ML)<1 || abs(guess-correct)<1){
+        score <- 2
+      }
+      # If within 1.5 of range for score of 4
+      else if(abs(guess-ML)<1.5 || abs(guess-correct)<1.5){
+        score <- 1
+      }
+      # If very far from valid range
+      else{
+        score <- 0
+      }}
+    else{score <- 0}
     score
   }
   
@@ -480,17 +487,12 @@ shinyServer(function(input, output, session) {
                     "the Expected Time until the Next Arrival.")
     paste0("Guess the Value for ", label)})
   
-  # Game tab's prompt
-  #output$questionPromptT <- renderText({"Guess the Value for Lambda."})
-  
   # Submit button for timed mode
   observeEvent(input$submitT, {
     # Case for lambda problems
     if(score$counter == 5){
       updateRadioButtons(session, "challengeChoiceT", 
                          label="Guess the Expected Time until Next Event")
-      # output$questionPromptT <- renderText({"Guess the expected time until next 
-      #   event."})
     }
     if(score$counter>5){
       error <- round(abs(input$challengeChoiceT - params$constant),2)
@@ -584,7 +586,6 @@ shinyServer(function(input, output, session) {
   
   # Alt-text
   output$gamePracticePlotAlt <- renderUI({
-    print(data()$x.value)
     arrivalTimes <- toString(round(data()$x.value, 2))
     tags$script(HTML(
       paste0("$(document).ready(function() {
@@ -605,7 +606,6 @@ shinyServer(function(input, output, session) {
              arrivalTimes, "`)})"
       )))
   })
-  
 })
     
   
