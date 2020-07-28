@@ -1,392 +1,610 @@
 library(shiny)
 library(shinydashboard)
-library(shinyBS)
-library(shinyjs)
-library(plotly)
 library(ggplot2)
 library(shinyWidgets)
-library(shinycssloaders)
 
-colors = c("#3CA2C8", "#10559A","#CC6BB1", "#F9C6D7","#DB4C77")
+# Colors to use for graphs
+colors = c("#0072B2","#D55E00","#009E73","#ce77a8","#E69F00")
 
-poisson.homo = function(n,lambda){
-  x = rexp(n,lambda)
-  m = cumsum(x)
-  k = 0:n
-  plot(stepfun(x=m,y=k), main = "Homogeneous Poisson Plot", xlab = "Time (t)", ylab = "# of events (N(t))")
-  par(new=T)
-}
-
-resi.homo = function(n,lambda){
-  x = rexp(n,lambda)
-  m = cumsum(x)
-  h = 0:(n-1)
-  resi = lambda*m - h
-  mean_resi = mean(resi)
-  plot(m, resi, xlim=range(m), ylim=range(resi), xlab="t", ylab="N(t)-E(N(t))", 
-       main = "Residuals Plot",pch=16)
-  lines(m[order(m)], resi[order(m)], xlim=range(m), ylim=range(resi), pch=16 )
-  abline(h = mean_resi, col = "red", lty = 3, lwd = 3)
-}
+# Values for game
+# NOTE: Timed refers to the scored mode and the timer refers to the score counter
+params <- reactiveValues(constant=1, 
+                       lambdatype="constant", 
+                       slope=1, growth=1, 
+                       coefficient=.05) 
+nevent <- 50 # number of events for game graphs
+score <- reactiveValues(val=0, 
+                      prob=1, 
+                      valT=0, 
+                      probT=1, 
+                      counter=10, 
+                      bestGuess=0, 
+                      bestGuessT=0) 
+timer <- reactiveValues(run=FALSE) # When game should be showing
 
 shinyServer(function(input, output, session) {
-  
+  # Instructions button
   observeEvent(input$info,{
     sendSweetAlert(
       session = session,
       title = "Instructions:",
-      text = "This app explores the Poisson process to see how the distribution of the count at time t, 
-              the interarrival times, and the deviation from expectations behave as the intensity rate and observation time changes.",
+      text = "This app explores the Poisson process to see how the distribution 
+      of the count at time t, the interarrival times, and the deviation from 
+      expectations behave as the intensity rate and observation time changes. 
+      After reviewing the prerequisites, use the explore page to manipulate the 
+      rate and number of samples. The first plot shows the samples, the second 
+      the residuals, and the third the density of the interarrival times. Then 
+      play the game to test your ability to guess lambda and interarrival rates 
+      for various plots.",
       type = "info"
     )
   })
+  
+  # Go to explore button
   observeEvent(input$goover, {
-    updateTabItems(session, "tabs", "overview")
+    updateTabItems(session, "tabs", "exp")
   })
   
+  # Go to prereqs button
   observeEvent(input$bsButton1, {
     updateTabItems(session, "tabs", "exp")
   })
   
+  # Button to start game
   observeEvent(input$bsButton4, {
     updateTabItems(session, 'game', 'fib')
   })
   
+  # Returns number of samples (reset if resample)
   n = reactive({
     input$resample
     return(input$nevent)
   })
   
+  # Return lambda (reset if resample)
   rate = reactive({
     input$resample
     return(input$lambda)
   })
   
-  p = reactive({
+  # Return number of paths (reset if resample)
+  p <- reactive({
     input$resample
     return(input$path)
   })
   
+  # Explains design (given checkbox)
   output$design = renderUI({
     if(input$designcheckbox){
-      withMathJax(h4("These plots were generated from simulations of a homogeneous Poisson Process which has 
-                      exponential interarrival times with rate intensity \\(\\lambda\\)."))
-    }
+      withMathJax("These plots were generated from simulations of a homogeneous 
+                   Poisson Process which has exponential interarrival times with 
+                   rate intensity \\(\\lambda\\).")}
   })
   
+  #Simulate poisson process
+  simulate <- reactive({
+    m <- matrix(0, nrow = p(), ncol = n())
+    for (j in 1:p()){
+      x <- rexp(n(),rate())
+      m[j,] <- cumsum(x)
+    }
+    m
+  })
+  
+  # Plot the overall process
   output$homopois = renderPlot({
-    
-    x.value = matrix(0, nrow = p(), ncol = n())
-    y.value = matrix(0, nrow = p(), ncol = n())
-    for (j in 1:p()){
-      x = rexp(n(),rate())
-      m = cumsum(x)
-      h = 1:n()
-      for (i in 1:n()){
-        x.value[j,i] = m[i] 
-        y.value[j,i] = h[i] 
-      }
-    }
-    
-    for (i in 1:p()){
-      if (i == 1){
-        plot(x.value[i,], y.value[i,], xlim = range(x.value[i,]), ylim = range(y.value[i,]),
-             xlab="Time (t)", ylab="# of events up to t (N(t))", main = "Homogeneous Poisson Process Plot",
-             col = colors[i], 
-              pch=16)
-        m = x.value[i,]
-        y = y.value[i,]
-        lines(m[order(m)], y[order(m)], xlim=range(m), ylim=range(y), pch=16, lwd = 1.5, col = colors[i])
-      }
-      if (i > 1){
-        plot(x.value[1:i,], y.value[1:i,], xlim = range(x.value[1:i,]), ylim = range(y.value[1:i,]),
-             xlab="Time (t)", ylab="# of events up to t (N(t))", main = "Homogeneous Poisson Process Plot",
-             col = colors[1:i],
-             pch=16)
-        
-        for (k in 1:i){
-          m = x.value[k,]
-          y = y.value[k,]
-          lines(m[order(m)], y[order(m)], xlim=range(m), ylim=range(y), pch=16, lwd = 1.5, col = colors[k])
+    # Set up matricies for x and y values (rows are paths, cols are samples)
+    x.value = simulate()
+    y.value = matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
+
+    # Create a data frame to use with ggplot
+        names <- c("x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4", "x5", "y5")
+        df <- data.frame(x1=1:n(),y1=1:n(),x2=1:n(),y2=1:n(),x3=1:n(),y3=1:n(),
+                       x4=1:n(),y4=1:n(),x5=1:n(),y5=1:n())
+        for(j in 1:p()){
+          df[,2*j-1] <- x.value[j,]
+          df[,2*j] <- y.value[j,]
         }
+        df <- df[,1:(2*p())]
         
-      }
-      
-    }
+        # Create plot
+        plot <- ggplot(aes(x=x1, y=y1), data=df) +
+          ggtitle("Homogeneous Poisson Process Plot") +
+          xlim(range(x.value[1:p(),])) +
+          ylim(range(y.value[1:p(),])) +
+          xlab("Time (t)") +
+          ylab("Number of events up to t (N(t))") +
+          geom_path(aes(x=x1, y=y1), data=df, color=colors[1]) +
+          geom_point(aes(x=x1, y=y1), data=df, color=colors[1], size=2) +
+          theme(axis.text = element_text(size=18),
+                plot.title = element_text(size=18, face="bold"),
+                axis.title = element_text(size=18),
+                panel.background = element_rect(fill = "white", color="black"),
+                legend.position=c(.89,1.07),
+                legend.text = element_text(size=14))
+        # Add extra paths  
+        for(j in 1:p()){
+          plot <- plot + geom_path(aes_string(x=names[2*j-1], y=names[2*j]), 
+                                 data=df, 
+                                 color=colors[j]) +
+          geom_point(aes_string(x=names[2*j-1], y=names[2*j]), 
+                     data=df, 
+                     color=colors[j], 
+                     size=2)
+        }
+    plot
   })
   
-  output$resipath = renderPlot({
-    
-    x.value = matrix(0, nrow = p(), ncol = n())
-    resi.value = matrix(0, nrow = p(), ncol = n())
-    for (j in 1:p()){
-      x = rexp(n(),rate())
-      m = cumsum(x)
-      h = 1:n()
-      resi = h - (rate())*m 
-      for (i in 1:n()){
-        x.value[j,i] = m[i] 
-        resi.value[j,i] = resi[i] 
-      }
+  # Residuals plot
+  output$resipath <- renderPlot({
+    # Create matrix for x and y values
+    x.value = simulate()
+    y.value = matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
+    y.value <- y.value - rate()*simulate()
+
+    # Create data frame for ggplot
+    names <- c("x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4", "x5", "y5")
+    df <- data.frame(x1=1:n(),y1=1:n(),x2=1:n(),y2=1:n(),x3=1:n(),y3=1:n(),
+                   x4=1:n(),y4=1:n(),x5=1:n(),y5=1:n())
+    for(j in 1:p()){
+      df[,2*j-1] <- x.value[j,]
+      df[,2*j] <- y.value[j,]
     }
+    df <- df[,1:(2*p())]
     
-    for (i in 1:p()){
-      if (i == 1){
-        plot(x.value[i,], resi.value[i,], xlim = range(x.value[i,]), ylim = range(resi.value[i,]),
-             xlab="Time (t)", ylab="Residual value (N(t) - E(N(t)))", main = "Residuals Plot", col = colors[i], pch=16)
-        m = x.value[i,]
-        resi = resi.value[i,]
-        lines(m[order(m)], resi[order(m)], xlim=range(m), ylim=range(resi), pch=16, lwd = 1.5, col = colors[i])
-      }
-      if (i > 1){
-        plot(x.value[1:i,], resi.value[1:i,], xlim = range(x.value[1:i,]), ylim = range(resi.value[1:i,]),
-             xlab="Time (t)", ylab="Residual value (N(t) - E(N(t)))", main = "Residuals Plot", col = colors[1:i], pch=16)
-        
-        for (k in 1:i){
-          m = x.value[k,]
-          resi = resi.value[k,]
-        lines(m[order(m)], resi[order(m)], xlim=range(m), ylim=range(resi), pch=16, lwd = 1.5, col = colors[k])
-        }
-        
-      }
-      
-      abline(h = 0, col = "black", lty = 3, lwd = 3)
+    # Create actual plot
+    plot <- ggplot(aes(x=x1, y=y1), data=df)+
+      ggtitle("Residuals Plot")+
+      xlim(range(x.value[1:p(),]))+
+      ylim(range(y.value[1:p(),]))+
+      xlab("Time (t)")+
+      ylab("Residual value (N(t) - E(N(t)))")+
+      geom_path(aes(x=x1, y=y1), data=df, color=colors[1])+
+      geom_point(aes(x=x1, y=y1), data=df, color=colors[1], size=2)+
+      theme(axis.text = element_text(size=18),
+            plot.title = element_text(size=18, face="bold"),
+            axis.title = element_text(size=18),
+            panel.background = element_rect(fill = "white", color="black"),
+            legend.position=c(.89,1.07),
+            legend.text = element_text(size=14))+
+            geom_hline(aes(yintercept=0, linetype="Zero"), show.legend=F, size=1)+
+            scale_linetype_manual(name = "", values = c("dashed"))
+    
+    # Add extra paths
+    for(j in 1:p()){
+      plot <- plot + geom_path(aes_string(x=names[2*j-1], y=names[2*j]), 
+                             data=df, 
+                             color=colors[j]) +
+        geom_point(aes_string(x=names[2*j-1], y=names[2*j]), 
+                   data=df, 
+                   color=colors[j], 
+                   size=2)
     }
-      
-    
+    plot
   })
   
+  # Create interarrival time plot
   output$interarrival = renderPlot({
-    
-    if(input$densitycheckbox){
-      x.value = matrix(0, nrow = p(), ncol = n())
+    # Get simulated poisson data
+      x.value <- simulate()
       
-      for (j in 1:p()){
-        x = rexp(n(),rate())
-        m = cumsum(x)
-        for (i in 1:n()){
-          x.value[j,i] = m[i] 
-        }
-      }
-      
-      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value)
+      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value) # Add column of 0s to x.value
+      # Create 3 empty data frames
       inter.arr = data.frame()
       Int = data.frame()
       Group = data.frame()
       
-      for (i in 1:p()){
-        for (j in 1:n()){
-          Int[j + (n())*(i - 1), 1] = arr[i,j+1] - arr[i,j]
-          Group[j + (n())*(i - 1), 1] = i
-        }
-        inter.arr = cbind(Int,Group)
-      }
       
+      for (i in 1:p()){ # For each path
+        for (j in 1:n()){ # For each sample
+          Int[j + (n())*(i - 1), 1] <- arr[i,j+1] - arr[i,j] # Assign interarrival time
+          Group[j + (n())*(i - 1), 1] <- i # Mark path number
+        }
+      }
+      # Combine the times and the path numbers
+      inter.arr <- cbind(Int,Group)
       names(inter.arr) = c("Int","Group")
       
-      cutoffX = qexp(p = 0.95,rate = rate())
-      xSeq = seq(0,cutoffX,length.out = p()*n())
-      yTheo = dexp(x = xSeq,rate = rate())
-      
-      plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
-        theme_bw()+theme_classic()+
-        ggtitle("Interarrival Time Distribution for Sampled Processes") +
-        xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
-        theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
-              panel.background = element_rect(fill = 'white', colour = 'black'),
+      # Create actual plot
+      plot1 <- ggplot(inter.arr, 
+                      aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
+        theme_bw() +
+        theme_classic() +
+        ggtitle("Estimated Interarrival Time Distribution") +
+        xlab("Interarrival Time") + 
+        ylab("Estimated Density") +
+        labs(fill = "Number of Path") +
+        theme(panel.background = element_rect(fill = 'white', colour = 'black'),
               panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()) +
-        stat_density(geom = "line", size = 1, position = "identity")+
-        scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
-        scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
+              axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.grid.minor = element_blank(),
+              legend.text = element_text(size=14)
+              ) +
+        stat_density(geom = "line", 
+                     size = 1, 
+                     position = "identity",  
+                     show.legend=F)+
+        scale_y_continuous(expand = expansion(mult = c(0, 0.15), add = 0)) +
+        scale_x_continuous(expand = expansion(mult = c(0, 0.05), add = 0)) +
         scale_color_manual(values = colors)
       
-      plot2 = plot1 + geom_line(aes(xSeq,yTheo),colour = "black",size = 1.5)
-      plot2
-    }
-    
-    else{
-      x.value = matrix(0, nrow = p(), ncol = n())
-      
-      for (j in 1:p()){
-        x = rexp(n(),rate())
-        m = cumsum(x)
-        for (i in 1:n()){
-          x.value[j,i] = m[i] 
-        }
+      # Add density curve if requested
+      if(input$densitycheckbox){
+        cutoffX <- qexp(p = 0.95,rate = rate())
+        xSeq <- seq(0,cutoffX,length.out = p()*n())
+        yTheo <- dexp(x = xSeq,rate = rate())
+        
+        plot1 <- plot1 + 
+          geom_line(aes(xSeq,yTheo, linetype="True Density"),
+                    colour = "black",
+                    size = 1.5, 
+                    show.legend=NA) +
+        scale_linetype_manual(name = "",
+                              values = c("solid"), 
+                              guide = guide_legend(override.aes = list(color = c("black"))))
       }
-      
-      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value)
-      inter.arr = data.frame()
-      Int = data.frame()
-      Group = data.frame()
-      
-      for (i in 1:p()){
-        for (j in 1:n()){
-          Int[j + (n())*(i - 1), 1] = arr[i,j+1] - arr[i,j]
-          Group[j + (n())*(i - 1), 1] = i
-        }
-        inter.arr = cbind(Int,Group)
-      }
-      
-      names(inter.arr) = c("Int","Group")
-      
-      plot1 = ggplot(inter.arr, aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
-        theme_bw()+theme_classic()+
-        ggtitle("Interarrival Time Distribution for Sampled Processes") +
-        xlab("Time") + ylab("Estimated Density")+labs(fill = "Number of Path")+
-        theme(plot.title = element_text(hjust = 0.5, face = "bold",size=14),
-              panel.background = element_rect(fill = 'white', colour = 'black'),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()) +
-        stat_density(geom = "line", size = 1, position = "identity")+
-        scale_y_continuous(expand = expand_scale(mult = c(0, 0.15), add = 0)) +
-        scale_x_continuous(expand = expand_scale(mult = c(0, 0.05), add = 0)) +
-        scale_color_manual(values = colors)
       plot1
-     
+    })
+    
+    # Warning message for single sample interarrival times  
+    output$feedback = renderPrint({
+      if (n()==1) {
+        cat("CAUTION: Need more than one event to estimate density of 
+            interarrival times.")}
+    })
+    
+  # GAME ----
+  # Generate data to plot for game  
+  data <- reactive({
+    timeFun <- function(y, time)((y/params$constant)+time)
+    
+    # Set up matrices to hold all simulated values
+    x.value = matrix(0, nrow = 1, ncol = nevent)
+    y.value = matrix(0, nrow = 1, ncol = nevent)
+    resi.value = matrix(0, nrow = 1, ncol = nevent)
+    
+    # Run simulation for each path
+    Y=rexp(nevent,1)
+    newtime=0
+    x=NULL
+    i=1
+    # Create data by moving through time
+    while (i<(nevent+1)){
+      time=newtime
+      x <- append(x,timeFun(Y[i], time))
+      newtime=timeFun(Y[i], time)
+      i=i+1
+    }
+    m = x
+    h = 1:nevent
+    int_lambda <- NULL
+    # Take integrals of intensity function
+    for (k in m){
+      int_lambda <- append(int_lambda,
+                         integrate(intensity(), lower = 0, upper = k)$value)
+    }
+    resi=(h-int_lambda)
+    x.value[1,] <- m
+    y.value[1,] <- h
+    resi.value[1,] <- resi
+    # returns a data frame with the three values to be used in the various plots
+    list(x.value=x.value, y.value=y.value, resi.value=resi.value)
+  })
+  
+  # Gives the intensity function
+  intensity <- reactive({
+    function(t)(params$constant*t^0)
+  })
+  
+  # Output for current score in practice or timed mode
+  output$score <- renderText({
+    paste("Current Score:", score$val)})
+  output$scoreT <- renderText({
+    paste("Current Score:", score$valT)})
+  output$gamePlot2 <- renderPlot({makePlot()})
+  output$plot2T <- renderPlot({makePlot()})
+  makePlot <- reactive({    
+    # Set up data
+    x.value <- data()$x.value
+    y.value <- data()$y.value
+    point <- ceiling(nevent/3)
+    x <- NULL
+    y <- NULL
+    grp <- NULL
+    x <- c(x, x.value[1,])
+    y <- c(y, y.value[1,])
+    data <- data.frame(x.value=x, y.value=y)
+    # Plot each path
+    plot <- ggplot(aes(x=x.value, y=y.value), data=data) +
+      geom_path()+
+      geom_point(size=2) +
+      ggtitle("Number of Events vs. Time")+
+      xlab("Time (t)") +
+      ylab("Number of events") +
+      theme_bw()+
+      theme(
+        axis.text = element_text(size=18),
+        plot.title = element_text(size=18, face="bold"),
+        axis.title = element_text(size=18),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="none"
+      )+
+      scale_y_continuous(limits = c(0, max(y.value)*1.1), 
+                         expand = expansion(mult = 0, add = c(0,0.05))) +
+      scale_x_continuous(limits = c(0, max(x.value)*1.1), 
+                         expand = expansion(mult = 0, add = c(0,0.05))) 
+    
+    plot
+  })
+  
+  # Next button for practice mode
+  observeEvent(input$nextX, {
+    params$constant <- runif(1,1,10)   
+    score$prob <- 1
+    shinyjs::hideElement("challengeFeedback")
+    shinyjs::hideElement('textFeedback')
+    shinyjs::hideElement('trueAns')
+    shinyjs::hideElement('MLerror')
+    shinyjs::hideElement('MLguess')
+    shinyjs::enable("submitX")
+  })
+  
+  # What to do when game ends
+  endGame <- reactive({
+    timer$run <- FALSE
+    sendSweetAlert(
+      session = session,
+      title = paste("Final Score:",score$valT),
+      text = ifelse(score$valT<20, "Try again for a better score.", 
+                    ifelse(score$valT<30, "Good work",
+                           "Great Job!"))
+    )
+  })
+  
+  # Next button for timed mode
+  observeEvent(input$nextT, {
+    if(score$counter == 0){
+      endGame()
+    }
+    if(score$counter > 5){
+      updateNumericInput(session, "challengeChoiceT", label="Guess the Value for Lambda.")
+    }
+    else{updateNumericInput(session, "challengeChoiceT", 
+                            label="Guess the Expected Time until Next Event")}
+    params$constant <- runif(1,1,10)   
+    
+    score$probT <- 1
+    shinyjs::hideElement('textFeedbackT')
+    shinyjs::hideElement('trueAnsT')
+    shinyjs::hideElement('MLerrorT')
+    shinyjs::hideElement('MLguessT')
+    shinyjs::enable("submitT")
+    shinyjs::disable("nextT")
+  })
+
+  observeEvent(input$practiceMode, {
+    if(input$practiceMode=="lambda"){
+      updateRadioButtons(session, "challengeChoice", 
+                         label="Guess the Value for Lambda")
+    }
+    else{
+      updateRadioButtons(session, "challengeChoice", 
+                         label="Guess the Expected Time until Next Event")
+    }
+  })
+  # Submit button for timed mode
+  observeEvent(input$submitX, {
+    # If asking about lambda values
+    if(input$practiceMode=="lambda"){
+      error <- round(abs(input$challengeChoice - params$constant),2)
+      output$trueAns <- renderText({paste("True Lambda:", round(params$constant, 2))})
+      score$val <- score$val + checkScore(correct=params$constant, 
+                                        ML = (data()$y.value[50]/data()$x.value[50]),
+                                        guess = input$challengeChoice, invert=F)
+      score$bestGuess <- score$bestGuess + 
+        round(abs(data()$y.value[50]/data()$x.value[50] - params$constant),2) 
+      output$MLerror <- renderText({paste("ML Error: ", 
+                                          round(abs(
+                                            data()$y.value[50]/data()$x.value[50] - 
+                                              params$constant),2))})
+      output$MLguess <- renderText({paste("ML Guess: ", 
+                                          round(abs(
+                                            data()$y.value[50]/data()$x.value[50]),
+                                            2))})
+    }
+    # If asking about wait time to next arrival
+    else{
+      error <- round(abs(input$challengeChoice - 1/params$constant),2)
+      output$trueAns <- renderText({paste("True Expected Time until Next Event:", 
+                                        round(1/params$constant, 2))})
+      score$val <- score$val + checkScore(correct=1/params$constant, 
+                                        ML = 1/(data()$y.value[50]/data()$x.value[50]), 
+                                        guess = input$challengeChoice, 
+                                        invert=T)
+      score$bestGuess <- score$bestGuess + 
+        round(abs(1/(data()$y.value[50]/data()$x.value[50]) - 1/params$constant),2) 
+      output$MLerror <- renderText({paste("ML Error:", 
+                                          round(
+                                            abs(1/(data()$y.value[50]/data()$x.value[50]) - 
+                                                  1/params$constant),2))})
+      output$MLguess <- renderText({paste("ML Guess:", 
+                                          round(abs(
+                                            1/(data()$y.value[50]/data()$x.value[50])),2))})
     }
     
-    
+    # resets output to amount of error
+    output$textFeedback <- renderText ({ 
+      paste("Error: ", error, "\n")
     })
-      output$feedback = renderPrint({
-      if (n()==1) {cat("CAUTION: Need more than one event to estimate density of interarrival times.")}
-   })
-  
-  
     
+    shinyjs::showElement("challengeFeedback")
+    shinyjs::showElement('textFeedback')
+    shinyjs::showElement("trueAns")
+    shinyjs::showElement('MLerror')
+    shinyjs::showElement('MLguess')
+  })
+  
+  # Checks answer against the maximum likelihood guess and the correct answer
+  # Assigns a score accordingly
+  checkScore <- function(correct, ML, guess, invert=F){
+    if(invert){
+      correct <- 1/correct
+      ML <- 1/ML
+      guess <- 1/guess
+    }
+    if((guess<=ML && guess>=correct) || (guess>=ML && guess<=correct)){
+      score <- 4
+    }
+    else if(abs(guess-ML)<.5 || abs(guess-correct)<.5){
+      score <- 3
+    }
+    else if(abs(guess-ML)<1 || abs(guess-correct)<1){
+      score <- 2
+    }
+    else if(abs(guess-ML)<1.5 || abs(guess-correct)<1.5){
+      score <- 1
+    }
+    else{
+      score <- 0
+    }
+    score
+  }
+  
+  # Practice tab's prompt
+  output$questionPrompt <- renderText({
+    label <- ifelse(input$practiceMode=="lambda", 
+                    "Lambda.", 
+                    "the Expected Time until the Next Arrival.")
+    paste0("Guess the Value for ", label)})
+  
+  # Game tab's prompt
+  #output$questionPromptT <- renderText({"Guess the Value for Lambda."})
+  
+  # Submit button for timed mode
+  observeEvent(input$submitT, {
+    # Case for lambda problems
+    if(score$counter == 5){
+      updateRadioButtons(session, "challengeChoiceT", 
+                         label="Guess the Expected Time until Next Event")
+      # output$questionPromptT <- renderText({"Guess the expected time until next 
+      #   event."})
+    }
+    if(score$counter>5){
+      error <- round(abs(input$challengeChoiceT - params$constant),2)
+      score$valT <- score$valT + checkScore(correct=params$constant, 
+                                          ML = (data()$y.value[50]/data()$x.value[50]), 
+                                          guess = input$challengeChoiceT, invert=F)
+      score$bestGuessT <- score$bestGuessT + 
+        round(abs(
+          data()$y.value[50]/data()$x.value[50] - params$constant), 2)
+      output$trueAnsT <- renderText({paste("True Lambda:", 
+                                         round(params$constant, 2))})
+      output$MLerrorT <- renderText({paste("ML Error: ",
+                                           round(abs(
+                                             data()$y.value[50]/data()$x.value[50] - 
+                                               params$constant),2))})
+      output$MLguessT <- renderText({paste("ML Guess: ",
+                                           round(abs(
+                                             data()$y.value[50]/data()$x.value[50]),2))})
+    }
+    # Expected wait time problems
+    else{
+      error <- round(abs(input$challengeChoiceT - 1/params$constant),2)
+      output$trueAnsT <- renderText({paste("True Expected Time:", 
+                                         round(1/params$constant, 2))})
+      score$bestGuessT <- score$bestGuessT + 
+        round(abs(1/(data()$y.value[50]/data()$x.value[50]) - 1/params$constant),2)
+      score$valT <- score$valT + checkScore(correct=1/params$constant, 
+                                          ML = 1/(data()$y.value[50]/data()$x.value[50]), 
+                                          guess = input$challengeChoiceT, 
+                                          invert=T)
+      output$MLerrorT <- renderText({paste("ML Error: ",
+                                           round(abs(
+                                             1/(data()$y.value[50]/data()$x.value[50]) - 
+                                               1/params$constant),2))})
+      output$MLguessT <- renderText({paste("ML Guess: ",
+                                           round(abs(
+                                             1/(data()$y.value[50]/data()$x.value[50])),2))})
+      }
+   
+    # Update output to correct error
+    output$textFeedbackT <- renderText ({ 
+          paste("Error: ", error, "\n")
+      })
+    score$counter <- score$counter - 1
 
+    shinyjs::showElement('textFeedbackT')
+    shinyjs::showElement('trueAnsT')
+    shinyjs::showElement('MLerrorT')
+    shinyjs::showElement('MLguessT')
+    shinyjs::enable("nextT")
+    shinyjs::disable("submitT")
+  })
+  
+  # Output for number of questions left
+  output$nQuestionsRemaining <- renderText({
+    paste("Questions Remaining: ", score$counter, " ")
+    })
+  
+  # Button for starting the timed mode
+  observeEvent(input$startTimedGame, {
+    timer$run <- TRUE
+    score$valT <- 0
+    score$probT <- 1
+    score$counter <- 10
+    click('nextT')
+  })
 
-  # question <- read.csv('homo.csv')
-  # question$Question=as.character(question$Question)
-  # question$A=as.character(question$A)
-  # question$B=as.character(question$B)
-  # question$C=as.character(question$C)
-  # question$D=as.character(question$D)
-  # question$Correct=as.character(question$Correct)
-  # question$Feedback=as.character(question$Feedback)
-  # sapply(question, class)
-  # 
-  # values <- reactiveValues()
-  # 
-  # output$question <- renderUI ({
-  #   values$num <- sample(1:16, 1, replace = FALSE) 
-  #   cquestion <- question$Question[values$num]
-  #   if(values$num == 1){
-  #     IG<-div(style = 'text-align: center', img(src = "1.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 2){
-  #     IG<-div(style = 'text-align: center', img(src = "2.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 3){
-  #     IG<-div(style = 'text-align: center', img(src = "3.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 4){
-  #     IG<-div(style = 'text-align: center', img(src = "4.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 5){
-  #     IG<-div(style = 'text-align: center', img(src = "5.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 6){
-  #     IG<-div(style = 'text-align: center', img(src = "6.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 7){
-  #     IG<-div(style = 'text-align: center', img(src = "7.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 8){
-  #     IG<-div(style = 'text-align: center', img(src = "8.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 9){
-  #     IG<-div(style = 'text-align: center', img(src = "9.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 10){
-  #     IG<-div(style = 'text-align: center', img(src = "10.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 11){
-  #     IG<-div(style = 'text-align: center', img(src = "11.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 12){
-  #     IG<-div(style = 'text-align: center', img(src = "12.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 13){
-  #     IG<-div(style = 'text-align: center', img(src = "13.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 14){
-  #     IG<-div(style = 'text-align: center', img(src = "14.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 15){
-  #     IG<-div(style = 'text-align: center', img(src = "15.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   if(values$num == 16){
-  #     IG<-div(style = 'text-align: center', img(src = "16.jpg", width = "600px", height = "350px"))
-  #   }
-  #   
-  #   out<-HTML(paste(cquestion, IG, sep = "<br/>"))
-  #   out
-  #   
-  # })
-  # 
-  # #output$picture = renderUI({
-  #   
-  # #})
-  # 
-  # output$questionChoice <- renderUI ({
-  #   selectInput('challengeChoice', label = '',
-  #               choices = c("Please select your response",question$A[values$num], question$B[values$num], question$C[values$num], question$D[values$num])
-  #   )
-  # })
-  # 
-  # 
-  # 
-  # observeEvent(input$nextX, {
-  #   values$num = sample(1:16, 1, replace = FALSE) 
-  #   questionUpdate <- question$Question[values$num]
-  #   questionUpdate
-  # })
-  # 
-  # observeEvent(input$submitX, {
-  #   if (input$challengeChoice == question$Correct[values$num]) {
-  #     output$challengeFeedback <- renderUI ({
-  #       div(style = "text-align: center", img(src = 'correct.png', height = 100, width = 100))
-  #     })
-  #     output$textFeedback <- renderUI ({ #UI
-  #       div(style = "text-align: center", tags$h4('Congratulations!'))
-  #     })
-  #   }
-  #   else {
-  #     output$challengeFeedback <- renderUI ({
-  #       div(style = "text-align: center", img(src = 'incorrect.png', height = 100, width = 100))
-  #     })
-  #     output$textFeedback <- renderUI ({
-  #       div(style = "text-align: center", tags$h4(question$Feedback[values$num]))
-  #     })
-  #   }
-  # })
-  # 
-  # observeEvent(input$nextX, {
-  #   shinyjs::hideElement("challengeFeedback")
-  #   shinyjs::hideElement('textFeedback')
-  # })
-  # 
-  # observeEvent(input$submitX, {
-  #   shinyjs::showElement("challengeFeedback")
-  #   shinyjs::showElement('textFeedback')
-  # })
+  # Button to reset the timed game
+  observeEvent(input$resetTimedGame, {
+    shinyjs::enable("submitT")
+    shinyjs::enable("nextT")
+    shinyjs::enable("startTimedGame")
+    updateNumericInput(session, "challengeChoiceT", label="Guess the Value for Lambda.")
+    score$valT <- 0
+    score$probT <- 1
+    score$counter <- 10
+  })
+  
+  # Button to reset practice mode
+  observeEvent(input$resetPractice,{
+    score$val <- 0
+    score$bestGuess <- 0
+    score$prob <- 1
+    click("nextX")
+  })
+  
+  # Used to tell UI when to show the actual game in game mode
+  output$showGame <- reactive({timer$run})
+  outputOptions(output, "showGame", suspendWhenHidden=FALSE)
+  
+  
+  # Alt-text
+  output$gamePracticePlotAlt <- renderUI({
+    print(data()$x.value)
+    arrivalTimes <- toString(round(data()$x.value, 2))
+    tags$script(HTML(
+      paste0("$(document).ready(function() {
+            document.getElementById('gamePlot2').setAttribute('aria-label',
+            `This plot shows the path taken by the run generated for
+            the problem. For this problem, the arrival times are ",  
+             arrivalTimes, "`)})"
+      )))
+  })
+  
+  output$gamePlotAlt <- renderUI({
+    arrivalTimes <- toString(round(data()$x.value, 2))
+    tags$script(HTML(
+      paste0("$(document).ready(function() {
+            document.getElementById('plot2T').setAttribute('aria-label',
+            `This plot shows the path taken by the run generated for
+            the problem. For this problem, the arrival times are ",  
+             arrivalTimes, "`)})"
+      )))
+  })
   
 })
     
