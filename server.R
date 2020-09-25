@@ -2,27 +2,25 @@ library(shiny)
 library(shinydashboard)
 library(ggplot2)
 library(shinyWidgets)
-
-# Colors to use for graphs
-colors = c("#0072B2","#D55E00","#009E73","#ce77a8","#E69F00")
-
-# Values for game
-# NOTE: Timed refers to the scored mode and the timer refers to the score counter
-params <- reactiveValues(constant=1, 
-                       lambdatype="constant", 
-                       slope=1, growth=1, 
-                       coefficient=.05) 
-nevent <- 50 # number of events for game graphs
-score <- reactiveValues(val=0, 
-                      prob=1, 
-                      valT=0, 
-                      probT=1, 
-                      counter=10, 
-                      bestGuess=0, 
-                      bestGuessT=0) 
-timer <- reactiveValues(run=FALSE) # When game should be showing
+library(boastUtils)
 
 shinyServer(function(input, output, session) {
+  # Values for game
+  # NOTE: Timed refers to the scored mode and the timer refers to the score counter
+  params <- reactiveValues(constant=1, 
+                           lambdatype="constant", 
+                           slope=1, growth=1, 
+                           coefficient=.05) 
+  nevent <- 50 # number of events for game graphs
+  score <- reactiveValues(val=0, 
+                          prob=1, 
+                          valT=0, 
+                          probT=1, 
+                          counter=10, 
+                          bestGuess=0, 
+                          bestGuessT=0) 
+  timer <- reactiveValues(run=FALSE) # When game should be showing
+  
   # Instructions button
   observeEvent(input$info,{
     sendSweetAlert(
@@ -56,13 +54,13 @@ shinyServer(function(input, output, session) {
   })
   
   # Returns number of samples (reset if resample)
-  n = reactive({
+  n <- reactive({
     input$resample
     return(input$nevent)
   })
   
   # Return lambda (reset if resample)
-  rate = reactive({
+  rate <- reactive({
     input$resample
     return(input$lambda)
   })
@@ -74,7 +72,7 @@ shinyServer(function(input, output, session) {
   })
   
   # Explains design (given checkbox)
-  output$design = renderUI({
+  output$design <- renderUI({
     if(input$designcheckbox){
       withMathJax("These plots were generated from simulations of a homogeneous 
                    Poisson Process which has exponential interarrival times with 
@@ -94,28 +92,33 @@ shinyServer(function(input, output, session) {
   # Plot the overall process
   output$homopois = renderPlot({
     # Set up matricies for x and y values (rows are paths, cols are samples)
-    x.value = simulate()
-    y.value = matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
+    xValue = simulate()
+    yValue = matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
 
     # Create a data frame to use with ggplot
         names <- c("x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4", "x5", "y5")
         df <- data.frame(x1=1:n(),y1=1:n(),x2=1:n(),y2=1:n(),x3=1:n(),y3=1:n(),
                        x4=1:n(),y4=1:n(),x5=1:n(),y5=1:n())
         for(j in 1:p()){
-          df[,2*j-1] <- x.value[j,]
-          df[,2*j] <- y.value[j,]
+          df[,2*j-1] <- xValue[j,]
+          df[,2*j] <- yValue[j,]
         }
         df <- df[,1:(2*p())]
         
         # Create plot
         plot <- ggplot(aes(x=x1, y=y1), data=df) +
           ggtitle("Homogeneous Poisson Process Plot") +
-          xlim(range(x.value[1:p(),])) +
-          ylim(range(y.value[1:p(),])) +
+          xlim(range(xValue[1:p(),])) +
+          ylim(range(yValue[1:p(),])) +
           xlab("Time (t)") +
           ylab("Number of events up to t (N(t))") +
-          geom_path(aes(x=x1, y=y1), data=df, color=colors[1]) +
-          geom_point(aes(x=x1, y=y1), data=df, color=colors[1], size=2) +
+          geom_path(aes(x=x1, y=y1), 
+                    data=df, 
+                    color = boastUtils::boastPalette[1]) +
+          geom_point(aes(x=x1, y=y1), 
+                     data=df, 
+                     color = boastUtils::boastPalette[1], 
+                     size=2) +
           theme(axis.text = element_text(size=18),
                 plot.title = element_text(size=18, face="bold"),
                 axis.title = element_text(size=18),
@@ -125,12 +128,12 @@ shinyServer(function(input, output, session) {
         # Add extra paths  
         for(j in 1:p()){
           plot <- plot + geom_path(aes_string(x=names[2*j-1], y=names[2*j]), 
-                                 data=df, 
-                                 color=colors[j]) +
+                                 data = df, 
+                                 color = boastPalette[ifelse(j==5, j+1, j)]) +
           geom_point(aes_string(x=names[2*j-1], y=names[2*j]), 
-                     data=df, 
-                     color=colors[j], 
-                     size=2)
+                     data = df, 
+                     color = boastPalette[ifelse(j==5, j+1, j)], 
+                     size = 2)
         }
     plot
   })
@@ -138,61 +141,67 @@ shinyServer(function(input, output, session) {
   # Residuals plot
   output$resipath <- renderPlot({
     # Create matrix for x and y values
-    x.value = simulate()
-    y.value = matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
-    y.value <- y.value - rate()*simulate()
+    xValue <- simulate()
+    yValue <- matrix(rep(1:n(), p()), nrow = p(), ncol = n(), byrow = T)
+    yValue <- yValue - rate()*simulate()
 
     # Create data frame for ggplot
     names <- c("x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4", "x5", "y5")
     df <- data.frame(x1=1:n(),y1=1:n(),x2=1:n(),y2=1:n(),x3=1:n(),y3=1:n(),
                    x4=1:n(),y4=1:n(),x5=1:n(),y5=1:n())
     for(j in 1:p()){
-      df[,2*j-1] <- x.value[j,]
-      df[,2*j] <- y.value[j,]
+      df[,2*j-1] <- xValue[j,]
+      df[,2*j] <- yValue[j,]
     }
     df <- df[,1:(2*p())]
     
     # Create actual plot
     plot <- ggplot(aes(x=x1, y=y1), data=df)+
       ggtitle("Residuals Plot")+
-      xlim(range(x.value[1:p(),]))+
-      ylim(range(y.value[1:p(),]))+
+      xlim(range(xValue[1:p(),]))+
+      ylim(range(yValue[1:p(),]))+
       xlab("Time (t)")+
       ylab("Residual value (N(t) - E(N(t)))")+
-      geom_path(aes(x=x1, y=y1), data=df, color=colors[1])+
-      geom_point(aes(x=x1, y=y1), data=df, color=colors[1], size=2)+
+      geom_path(aes(x=x1, y=y1), 
+                data=df, 
+                color=boastUtils::boastPalette[1])+
+      geom_point(aes(x=x1, y=y1), 
+                 data=df, 
+                 color=boastUtils::boastPalette[1], 
+                 size=2) +
       theme(axis.text = element_text(size=18),
             plot.title = element_text(size=18, face="bold"),
             axis.title = element_text(size=18),
             panel.background = element_rect(fill = "white", color="black"),
             legend.position=c(.89,1.07),
             legend.text = element_text(size=14))+
-            geom_hline(aes(yintercept=0, linetype="Zero"), show.legend=F, size=1)+
+            geom_hline(aes(yintercept=0, linetype="Zero"), 
+                       show.legend=F, size=1) +
             scale_linetype_manual(name = "", values = c("dashed"))
     
     # Add extra paths
     for(j in 1:p()){
       plot <- plot + geom_path(aes_string(x=names[2*j-1], y=names[2*j]), 
                              data=df, 
-                             color=colors[j]) +
+                             color=boastPalette[ifelse(j==5, j+1, j)]) +
         geom_point(aes_string(x=names[2*j-1], y=names[2*j]), 
                    data=df, 
-                   color=colors[j], 
+                   color=boastPalette[ifelse(j==5, j+1, j)], 
                    size=2)
     }
     plot
   })
   
   # Create interarrival time plot
-  output$interarrival = renderPlot({
+  output$interarrival <- renderPlot({
     # Get simulated poisson data
-      x.value <- simulate()
+      xValue <- simulate()
       
-      arr = cbind(matrix(0,nrow=p(),ncol=1),x.value) # Add column of 0s to x.value
+      arr <- cbind(matrix(0,nrow=p(),ncol=1),xValue) # Add column of 0s to xValue
       # Create 3 empty data frames
-      inter.arr = data.frame()
-      Int = data.frame()
-      Group = data.frame()
+      interArr <- data.frame()
+      Int <- data.frame()
+      Group <- data.frame()
       
       
       for (i in 1:p()){ # For each path
@@ -202,11 +211,11 @@ shinyServer(function(input, output, session) {
         }
       }
       # Combine the times and the path numbers
-      inter.arr <- cbind(Int,Group)
-      names(inter.arr) = c("Int","Group")
+      interArr <- cbind(Int,Group)
+      names(interArr) <- c("Int","Group")
       
       # Create actual plot
-      plot1 <- ggplot(inter.arr, 
+      plot1 <- ggplot(interArr, 
                       aes(x=Int, group=Group,color=as.factor(Group),adjust=2)) +
         theme_bw() +
         theme_classic() +
@@ -228,7 +237,7 @@ shinyServer(function(input, output, session) {
                      show.legend=F)+
         scale_y_continuous(expand = expansion(mult = c(0, 0.15), add = 0)) +
         scale_x_continuous(expand = expansion(mult = c(0, 0.05), add = 0)) +
-        scale_color_manual(values = colors)
+        scale_color_manual(values = boastUtils::boastPalette[c(1:4, 6)])
       
       # Add density curve if requested
       if(input$densitycheckbox){
@@ -243,13 +252,14 @@ shinyServer(function(input, output, session) {
                     show.legend=NA) +
         scale_linetype_manual(name = "",
                               values = c("solid"), 
-                              guide = guide_legend(override.aes = list(color = c("black"))))
+                              guide = guide_legend(
+                                override.aes = list(color = c("black"))))
       }
       plot1
     })
     
     # Warning message for single sample interarrival times  
-    output$feedback = renderPrint({
+    output$feedback <- renderPrint({
       if (n()==1) {
         cat("CAUTION: Need more than one event to estimate density of 
             interarrival times.")}
@@ -261,36 +271,36 @@ shinyServer(function(input, output, session) {
     timeFun <- function(y, time)((y/params$constant)+time)
     
     # Set up matrices to hold all simulated values
-    x.value = matrix(0, nrow = 1, ncol = nevent)
-    y.value = matrix(0, nrow = 1, ncol = nevent)
-    resi.value = matrix(0, nrow = 1, ncol = nevent)
+    xValue <- matrix(0, nrow = 1, ncol = nevent)
+    yValue <- matrix(0, nrow = 1, ncol = nevent)
+    resiValue <- matrix(0, nrow = 1, ncol = nevent)
     
     # Run simulation for each path
-    Y=rexp(nevent,1)
-    newtime=0
-    x=NULL
-    i=1
+    Y <- rexp(nevent,1)
+    newtime <- 0
+    x <- NULL
+    i <- 1
     # Create data by moving through time
     while (i<(nevent+1)){
-      time=newtime
+      time <- newtime
       x <- append(x,timeFun(Y[i], time))
-      newtime=timeFun(Y[i], time)
-      i=i+1
+      newtime <- timeFun(Y[i], time)
+      i <- i+1
     }
-    m = x
-    h = 1:nevent
+    m <- x
+    h <- 1:nevent
     int_lambda <- NULL
     # Take integrals of intensity function
     for (k in m){
       int_lambda <- append(int_lambda,
                          integrate(intensity(), lower = 0, upper = k)$value)
     }
-    resi=(h-int_lambda)
-    x.value[1,] <- m
-    y.value[1,] <- h
-    resi.value[1,] <- resi
+    resi <- (h-int_lambda)
+    xValue[1,] <- m
+    yValue[1,] <- h
+    resiValue[1,] <- resi
     # returns a data frame with the three values to be used in the various plots
-    list(x.value=x.value, y.value=y.value, resi.value=resi.value)
+    list(xValue=xValue, yValue=yValue, resiValue=resiValue)
   })
   
   # Gives the intensity function
@@ -307,17 +317,17 @@ shinyServer(function(input, output, session) {
   output$plot2T <- renderPlot({makePlot()})
   makePlot <- reactive({    
     # Set up data
-    x.value <- data()$x.value
-    y.value <- data()$y.value
+    xValue <- data()$xValue
+    yValue <- data()$yValue
     point <- ceiling(nevent/3)
     x <- NULL
     y <- NULL
     grp <- NULL
-    x <- c(x, x.value[1,])
-    y <- c(y, y.value[1,])
-    data <- data.frame(x.value=x, y.value=y)
+    x <- c(x, xValue[1,])
+    y <- c(y, yValue[1,])
+    data <- data.frame(xValue=x, yValue=y)
     # Plot each path
-    plot <- ggplot(aes(x=x.value, y=y.value), data=data) +
+    plot <- ggplot(aes(x=xValue, y=yValue), data=data) +
       geom_path()+
       geom_point(size=2) +
       ggtitle("Number of Events vs. Time")+
@@ -332,9 +342,9 @@ shinyServer(function(input, output, session) {
         panel.grid.minor = element_blank(),
         legend.position="none"
       )+
-      scale_y_continuous(limits = c(0, max(y.value)*1.1), 
+      scale_y_continuous(limits = c(0, max(yValue)*1.1), 
                          expand = expansion(mult = 0, add = c(0,0.05))) +
-      scale_x_continuous(limits = c(0, max(x.value)*1.1), 
+      scale_x_continuous(limits = c(0, max(xValue)*1.1), 
                          expand = expansion(mult = 0, add = c(0,0.05))) 
     
     plot
@@ -370,7 +380,8 @@ shinyServer(function(input, output, session) {
       endGame()
     }
     if(score$counter > 5){
-      updateNumericInput(session, "challengeChoiceT", label="Guess the Value for Lambda.")
+      updateNumericInput(session, "challengeChoiceT", 
+                         label="Guess the Value for Lambda.")
     }
     else{updateNumericInput(session, "challengeChoiceT", 
                             label="Guess the Expected Time until Next Event")}
@@ -400,19 +411,21 @@ shinyServer(function(input, output, session) {
     # If asking about lambda values
     if(input$practiceMode=="lambda"){
       error <- round(abs(input$challengeChoice - params$constant),2)
-      output$trueAns <- renderText({paste("True Lambda:", round(params$constant, 2))})
+      output$trueAns <- renderText({paste("True Lambda:", 
+                                          round(params$constant, 
+                                                2))})
       score$val <- score$val + checkScore(correct=params$constant, 
-                                        ML = (data()$y.value[50]/data()$x.value[50]),
+                                        ML = (data()$yValue[50]/data()$xValue[50]),
                                         guess = input$challengeChoice, invert=F)
       score$bestGuess <- score$bestGuess + 
-        round(abs(data()$y.value[50]/data()$x.value[50] - params$constant),2) 
+        round(abs(data()$yValue[50]/data()$xValue[50] - params$constant),2) 
       output$MLerror <- renderText({paste("ML Error: ", 
                                           round(abs(
-                                            data()$y.value[50]/data()$x.value[50] - 
+                                            data()$yValue[50]/data()$xValue[50] - 
                                               params$constant),2))})
       output$MLguess <- renderText({paste("ML Guess: ", 
                                           round(abs(
-                                            data()$y.value[50]/data()$x.value[50]),
+                                            data()$yValue[50]/data()$xValue[50]),
                                             2))})
     }
     # If asking about wait time to next arrival
@@ -421,18 +434,17 @@ shinyServer(function(input, output, session) {
       output$trueAns <- renderText({paste("True Expected Time until Next Event:", 
                                         round(1/params$constant, 2))})
       score$val <- score$val + checkScore(correct=1/params$constant, 
-                                        ML = 1/(data()$y.value[50]/data()$x.value[50]), 
+                                        ML = 1/(data()$yValue[50]/data()$xValue[50]), 
                                         guess = input$challengeChoice, 
                                         invert=T)
       score$bestGuess <- score$bestGuess + 
-        round(abs(1/(data()$y.value[50]/data()$x.value[50]) - 1/params$constant),2) 
-      output$MLerror <- renderText({paste("ML Error:", 
-                                          round(
-                                            abs(1/(data()$y.value[50]/data()$x.value[50]) - 
-                                                  1/params$constant),2))})
-      output$MLguess <- renderText({paste("ML Guess:", 
-                                          round(abs(
-                                            1/(data()$y.value[50]/data()$x.value[50])),2))})
+        round(abs(1/(data()$yValue[50]/data()$xValue[50]) - 1/params$constant),2) 
+      output$MLerror <- renderText({
+        paste("ML Error:", round(
+          abs(1/(data()$yValue[50]/data()$xValue[50]) - 1/params$constant),2))})
+      output$MLguess <- renderText({
+        paste("ML Guess:", round(abs( 
+          1/(data()$yValue[50]/data()$xValue[50])),2))})
     }
     
     # resets output to amount of error
@@ -445,6 +457,7 @@ shinyServer(function(input, output, session) {
     shinyjs::showElement("trueAns")
     shinyjs::showElement('MLerror')
     shinyjs::showElement('MLguess')
+    shinyjs::disable("submitX")
   })
   
   # Checks answer against the maximum likelihood guess and the correct answer
@@ -496,21 +509,21 @@ shinyServer(function(input, output, session) {
     }
     if(score$counter>5){
       error <- round(abs(input$challengeChoiceT - params$constant),2)
-      score$valT <- score$valT + checkScore(correct=params$constant, 
-                                          ML = (data()$y.value[50]/data()$x.value[50]), 
-                                          guess = input$challengeChoiceT, invert=F)
+      score$valT <- score$valT + 
+        checkScore(correct=params$constant,
+                   ML = (data()$yValue[50]/data()$xValue[50]), 
+                   guess = input$challengeChoiceT, invert=F)
       score$bestGuessT <- score$bestGuessT + 
         round(abs(
-          data()$y.value[50]/data()$x.value[50] - params$constant), 2)
+          data()$yValue[50]/data()$xValue[50] - params$constant), 2)
       output$trueAnsT <- renderText({paste("True Lambda:", 
                                          round(params$constant, 2))})
-      output$MLerrorT <- renderText({paste("ML Error: ",
-                                           round(abs(
-                                             data()$y.value[50]/data()$x.value[50] - 
-                                               params$constant),2))})
-      output$MLguessT <- renderText({paste("ML Guess: ",
-                                           round(abs(
-                                             data()$y.value[50]/data()$x.value[50]),2))})
+      output$MLerrorT <- renderText({
+        paste("ML Error: ", round(abs(
+          data()$yValue[50]/data()$xValue[50] - params$constant),2))})
+      output$MLguessT <- renderText({
+        paste("ML Guess: ", round(abs(
+          data()$yValue[50]/data()$xValue[50]),2))})
     }
     # Expected wait time problems
     else{
@@ -518,18 +531,18 @@ shinyServer(function(input, output, session) {
       output$trueAnsT <- renderText({paste("True Expected Time:", 
                                          round(1/params$constant, 2))})
       score$bestGuessT <- score$bestGuessT + 
-        round(abs(1/(data()$y.value[50]/data()$x.value[50]) - 1/params$constant),2)
-      score$valT <- score$valT + checkScore(correct=1/params$constant, 
-                                          ML = 1/(data()$y.value[50]/data()$x.value[50]), 
-                                          guess = input$challengeChoiceT, 
-                                          invert=T)
-      output$MLerrorT <- renderText({paste("ML Error: ",
-                                           round(abs(
-                                             1/(data()$y.value[50]/data()$x.value[50]) - 
-                                               1/params$constant),2))})
-      output$MLguessT <- renderText({paste("ML Guess: ",
-                                           round(abs(
-                                             1/(data()$y.value[50]/data()$x.value[50])),2))})
+        round(abs(1/(data()$yValue[50]/data()$xValue[50]) - 1/params$constant),2)
+      score$valT <- score$valT + 
+        checkScore(correct=1/params$constant,
+                   ML = 1/(data()$yValue[50]/data()$xValue[50]), 
+                   guess = input$challengeChoiceT, 
+                   invert=T)
+      output$MLerrorT <- renderText({
+        paste("ML Error: ",round(abs(
+          1/(data()$yValue[50]/data()$xValue[50]) - 1/params$constant),2))})
+      output$MLguessT <- renderText({
+        paste("ML Guess: ", round(abs(
+          1/(data()$yValue[50]/data()$xValue[50])),2))})
       }
    
     # Update output to correct error
@@ -565,7 +578,8 @@ shinyServer(function(input, output, session) {
     shinyjs::enable("submitT")
     shinyjs::enable("nextT")
     shinyjs::enable("startTimedGame")
-    updateNumericInput(session, "challengeChoiceT", label="Guess the Value for Lambda.")
+    updateNumericInput(session, "challengeChoiceT", 
+                       label="Guess the Value for Lambda.")
     score$valT <- 0
     score$probT <- 1
     score$counter <- 10
@@ -586,7 +600,7 @@ shinyServer(function(input, output, session) {
   
   # Alt-text
   output$gamePracticePlotAlt <- renderUI({
-    arrivalTimes <- toString(round(data()$x.value, 2))
+    arrivalTimes <- toString(round(data()$xValue, 2))
     tags$script(HTML(
       paste0("$(document).ready(function() {
             document.getElementById('gamePlot2').setAttribute('aria-label',
@@ -597,7 +611,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$gamePlotAlt <- renderUI({
-    arrivalTimes <- toString(round(data()$x.value, 2))
+    arrivalTimes <- toString(round(data()$xValue, 2))
     tags$script(HTML(
       paste0("$(document).ready(function() {
             document.getElementById('plot2T').setAttribute('aria-label',

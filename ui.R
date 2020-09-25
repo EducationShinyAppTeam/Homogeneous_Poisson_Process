@@ -23,11 +23,14 @@ dashboardHeader(title = "Poisson Process",
 dashboardSidebar(
   width=250,
   sidebarMenu(id = 'tabs', 
-              menuItem("Overview", tabName = "overview", icon = icon("tachometer-alt")),
-              menuItem('Prerequisites', tabName = 'prerequisite', icon = icon('book')),
+              menuItem("Overview", tabName = "overview", 
+                       icon = icon("tachometer-alt")),
+              menuItem('Prerequisites', tabName = 'prerequisite', 
+                       icon = icon('book')),
               menuItem('Explore', tabName = "exp", icon = icon('wpexplorer')),
               menuItem("Game", tabName = "Game", icon = icon("gamepad")),
-              menuItem("References", tabName = "References", icon = icon("leanpub"))
+              menuItem("References", tabName = "References", 
+                       icon = icon("leanpub"))
               ),
 tags$div(
   class = "sidebar-logo",
@@ -47,8 +50,9 @@ dashboardBody(
             h1("Homogeneous Poisson Process"),
             
             withMathJax(),
-            p("In this app you will explore the relationship between \\(N(t)\\) 
-            and \\(t_{k}\\) through the simulation of data"),
+            p("In this app you will explore the relationship between the Poisson 
+              count process, \\(N(t)\\), and \\(t_{k}\\) and the event times 
+              through the simulation of paths of the process."),
             
             br(),
             h2("Instructions"),
@@ -66,9 +70,7 @@ dashboardBody(
             
             h2("Acknowledgements"),
                p("This app was coded and developed by Shubo Sun and Johnson 
-                 (Shunqi) Zhang."),
-               p("Special thanks to Dr. Pearl for giving useful and supportive 
-                 suggestions throughout the program.")
+                 (Shunqi) Zhang and reformatted by Leah Hunt.")
     ),
     
     # Prerequisites tab
@@ -76,11 +78,12 @@ dashboardBody(
       tabName = 'prerequisite', withMathJax(),
       
       h2('Prerequisites'),br(),
-      p("If a point process, \\(\\left\\{N^*(t);\\;t\\geq0\\right\\}\\) has a parameter of the form 
-      \\(\\lambda t\\), with independent increments and with \\(N(t)\\) being 
-      Poisson for all ", tags$em("t"), " with an average of \\(\\lambda t\\), \\(\\lambda\\) 
-      is a constant that represents the rate(or intensity), then this point 
-      process is called a homogeneous Poisson process."),
+      p("If a point process, \\(\\left\\{N^*(t);\\;t\\geq0\\right\\}\\) 
+      has a parameter of the form \\(\\lambda t\\), with independent increments 
+      and with \\(N(t)\\) being Poisson for all ", tags$em("t"), " with an 
+      average of \\(\\lambda t\\), \\(\\lambda\\) is a constant that represents 
+      the rate (or intensity), then this point process is called a homogeneous 
+        Poisson process."),
       br(),
       
       h3("Properties"),
@@ -94,7 +97,7 @@ dashboardBody(
         follow the distribution of order statistics from a uniform variable 
         between 0 and \\(T\\)."),
         tags$li("The interarrival times \\(t_{i+1}-t_{i}\\) for each \\(i\\) 
-        follows exponential distribution with rate \\(\\lambda\\).")),
+        follows an exponential distribution with rate \\(\\lambda\\).")),
       tags$img(src = 'Homo2.png', width = "750px", height = "200px"),
       br(),
       div(style = "text-align: center",bsButton("goover", "GO!", 
@@ -119,13 +122,14 @@ dashboardBody(
                   uiOutput("design"),
                   sliderInput("lambda", "Interarrival rate",
                               min = 0.1, max = 10, value = 0.1, step = 0.1),
-                  sliderInput("nevent", "Number of events up to t",
+                  sliderInput("nevent", "Number of events to stopping time",
                               min = 1, max = 150, value = 100, step = 1),
-                  sliderInput("path", "Number of residual paths",
+                  sliderInput("path", "Number of paths of the process",
                               min = 1, max = 5, value = 1, step = 1),
-                  checkboxInput("densitycheckbox","Show true density curve", TRUE),
+                  checkboxInput("densitycheckbox",
+                                "Show true density curve", TRUE),
                   
-                  actionButton("resample", "Sample", icon("retweet")),
+                  bsButton("resample", "Sample", icon("retweet")),
                   bsPopover("new",
                             "Note",
                             "By clicking on this button, new 100 events will be 
@@ -171,116 +175,109 @@ dashboardBody(
                             )))))
             ),
     # Game Tab
-    tabItem(tabName="Game", 
-            tabsetPanel(id = "game",
-                        tabPanel(title = "Instructions", value = "instr",
-                                 fluidPage(theme = 'Muted',
-                                           titlePanel('Instructions to Answering 
-                                                      the Practice Questions'),
-                                           p('Click on the GO! button to start 
-                                             the game.'),
-                                           p("Play the game in either game or 
-                                           practice mode. Practice mode has two 
-                                           versions: guess the lambda or guess 
-                                           the expected time until the next arrival. 
-                                           Game mode will give you 10 questions, 
-                                           the first 5 guessing lambda and the 
-                                           second 5 guessing the time until the 
-                                           next arrival. True lambda values will be 
-                                           in the range from 1 to 10."), 
-                                           p('Use the input box to input your 
-                                           answer to the prompt. If your from 0 
-                                             to 4. A score of 4 means you guessed 
-                                             between the maximum likelihood guess 
-                                             and true value. As you get further 
-                                             from this range, your score will 
-                                             decrease.'),
-                                           
-                                           br(),
-                                           div(style = "text-align: center",
-                                               bsButton(inputId = "bsButton4",
-                                                        label = "GO!", 
-                                                        icon('bolt'),  
-                                                        size = "median")))
-                                 ),
-                        tabPanel(title = "Practice Mode", value = "fib",
-                                 fluidRow(
-                                   column(
-                                     radioButtons("practiceMode", 
-                                                  "Choose a Question Type",
-                                                  choiceValues=c("lambda", 
-                                                                 "time"), 
-                                                  choiceNames=c("Lambda", 
-                                                                "Expected Time 
-                                                                until Next Event"),
-                                                  inline=T),
-                                     fluidRow(
-                                       column(width=5, 
-                                              numericInput('challengeChoice', 
-                                                    label = 'Guess the value for lambda.', 
-                                                    value=0),
-                                              bsButton(inputId = 'submitX', 
-                                                       label = 'Check Answer',
-                                                       size = 'median'),
-                                              bsButton(inputId = 'nextX', 
-                                                       label = 'Next',
-                                                       size = 'median')
-                                              ),
-                                       column(width = 7, 
-                                     
-                                     textOutput('textFeedback'),
-                                     textOutput("trueAns"),
-                                     textOutput("MLguess"),
-                                     textOutput("MLerror"),
-                                       )),
-                                   width=8),
-                           column(width=2,
-                                  textOutput("score"),
-                                  textOutput("ML")),
-                           column(width = 2, actionButton("resetPractice", "Reset"))
-                         ),
-                         plotOutput("gamePlot2"),  
-                      htmlOutput("gamePracticePlotAlt"),
+    tabItem(
+      tabName="Game", 
+      tabsetPanel(
+        id = "game",
+        tabPanel(
+          title = "Instructions", 
+          value = "instr",
+          fluidPage(
+            theme = 'Muted',
+            titlePanel('Instructions to Answering the Practice Questions'),
+            p('Click on the GO! button to start the game.'),
+            p("Play the game in either game or practice mode. Practice mode has 
+            two versions: guess the lambda or guess the expected time until the 
+            next arrival. Game mode will give you 10 questions, the first 5 
+            guessing lambda and the second 5 guessing the time until the next 
+            arrival. True lambda values will be in the range from 1 to 10."), 
+            p('Use the input box to input your answer to the prompt. Scores are 
+            between 0 and 4 on each problem. A score of 4 means you guessed
+            between the maximum likelihood guess and true value. As you get 
+            further from this range, your score will decrease.'),
+            
+            br(),
+            div(style = "text-align: center",
+                bsButton(inputId = "bsButton4",
+                         label = "GO!", 
+                         icon('bolt'),  
+                         size = "large")))
+        ),
+        tabPanel(
+          title = "Practice Mode", 
+          value = "fib",
+          fluidRow(
+            column(
+              radioButtons("practiceMode", 
+                           "Choose a Question Type",
+                           choiceValues=c("lambda", "time"), 
+                           choiceNames=c("Lambda", 
+                                         "Expected Time until Next Event"),
+                           inline=T),
+              fluidRow(
+                column(width=5, 
+                       numericInput('challengeChoice', 
+                                    label = 'Guess the value for lambda.', 
+                                    value=0),
+                       bsButton(inputId = 'submitX', 
+                                label = 'Check Answer'),
+                       bsButton(inputId = 'nextX', 
+                                label = 'Next')
                 ),
-                tabPanel(title = "Game Mode", value = "time",
-                         fluidRow(
-                           column(
-                             conditionalPanel(condition="output.showGame",
-                                              fluidRow(
-                                               column(width=7, 
-                                                      numericInput('challengeChoiceT', 
-                                                             label = 'Guess the value for lambda.',
-                                                             value=0),
-                                                      bsButton(inputId = 'submitT', 
-                                                               label = 'Check Answer',
-                                                               size = 'median'),
-                                                      bsButton(inputId = 'nextT', 
-                                                               label = 'Next',
-                                                               size = 'median'),
-                                                      br(), br()),
-                                              column(width =5, 
-                                                     br(),
-                                                     textOutput('textFeedbackT'),
-                                              textOutput("trueAnsT"),
-                                              textOutput("MLguessT"),
-                                              textOutput("MLerrorT")))),
-                                  width=7),
-                           column(width=3,
-                                  textOutput("scoreT"),
-                                  textOutput("MLT"),
-                                  textOutput("nQuestionsRemaining")),
-                           column(width=2, 
-                                  actionButton("startTimedGame", "Start Game"),
-                                  actionButton("resetTimedGame", "Reset Game")
-                                  )
-                         ),
-                         conditionalPanel(condition="output.showGame",
-                                           plotOutput("plot2T"),
-                      htmlOutput("gamePlotAlt"),
-                                          )
-                         )
-                )
-            ),
+                column(width = 7, 
+                       textOutput('textFeedback'),
+                       textOutput("trueAns"),
+                       textOutput("MLguess"),
+                       textOutput("MLerror"),
+                )),
+              width=8),
+            column(width=2,
+                   textOutput("score"),
+                   textOutput("ML")),
+            column(width = 2, bsButton("resetPractice", "Reset"))
+          ),
+          plotOutput("gamePlot2"),  
+          htmlOutput("gamePracticePlotAlt"),
+        ),
+        tabPanel(title = "Game Mode", value = "time",
+                 fluidRow(
+                   column(
+                     conditionalPanel(
+                       condition="output.showGame",
+                       fluidRow(
+                         column(
+                           width=7, 
+                           numericInput('challengeChoiceT', 
+                                        label = 'Guess the value for lambda.',
+                                        value=0),
+                           bsButton(inputId = 'submitT', 
+                                    label = 'Check Answer'),
+                           bsButton(inputId = 'nextT', 
+                                    label = 'Next'),
+                           br(), br()),
+                         column(width =5, 
+                                br(),
+                                textOutput('textFeedbackT'),
+                                textOutput("trueAnsT"),
+                                textOutput("MLguessT"),
+                                textOutput("MLerrorT")))),
+                     width=7),
+                   column(width=3,
+                          textOutput("scoreT"),
+                          textOutput("MLT"),
+                          textOutput("nQuestionsRemaining")),
+                   column(width=2, 
+                          bsButton("startTimedGame", "Start Game"),
+                          bsButton("resetTimedGame", "Reset Game")
+                   )
+                 ),
+                 conditionalPanel(condition="output.showGame",
+                                  plotOutput("plot2T"),
+                                  htmlOutput("gamePlotAlt"),
+                 )
+        )
+      )
+    ),
     # References tab
     tabItem(
       tabName = "References",
