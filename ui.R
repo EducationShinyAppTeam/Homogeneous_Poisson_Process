@@ -12,13 +12,20 @@ APP_DESCP  <<- "This app explores the homogeneous poisson process through simula
 # End App Meta Data------------------------------------------------------------
 
 dashboardPage(
-dashboardHeader(title = "Poisson Process", 
-                         titleWidth = 250,
-                         tags$li(class = "dropdown", 
-                                 actionLink("info", icon("info"))),
-                         tags$li(class = "dropdown",
-                                 tags$a(href='https://shinyapps.science.psu.edu/',
-                                        icon("home")))),
+dashboardHeader(
+  title = "Poisson Process", 
+  titleWidth = 250,
+  tags$li(class = "dropdown", 
+          actionLink("info", icon("info"))),
+  tags$li(
+    class = "dropdown",
+    tags$a(target = "_blank", icon("comments"),
+           href = "https://pennstate.qualtrics.com/jfe/form/SV_7TLIkFtJEJ7fEPz?appName=Homogeneous_Poisson_Process"
+    )
+  ),
+  tags$li(class = "dropdown",
+          tags$a(href='https://shinyapps.science.psu.edu/',
+                 icon("home")))),
 
 dashboardSidebar(
   width=250,
